@@ -225,3 +225,6 @@ __marimo__/
 
 # Node.js
 node_modules/
+
+# Tailwind Compiled CSS
+static/css/output.css

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
@@ -27,3 +27,10 @@ def login(request):
 @login_required(login_url='users:login')
 def dashboard(request):
     return render(request, 'users/dashboard.html')
+
+
+
+def logout(request):
+    auth_logout(request)
+    messages.success(request, 'Logged out successfully')
+    return redirect('users:login')

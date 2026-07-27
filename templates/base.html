@@ -108,15 +108,13 @@
                                 {% endif %}
                             </p>
                         </div>
-                        <div class="relative">
+                        <div>
                             {% if request.user.is_authenticated and request.user.photo %}
-                                <img class="w-10 h-10 rounded-full object-cover border-2 border-border-teal cursor-pointer hover:border-primary transition-colors"
+                                <img class="w-10 h-10 rounded-full object-cover border-2 border-border-teal"
                                      alt="Profile"
-                                     src="{{ request.user.photo.url }}"
-                                     onclick="document.getElementById('user-dropdown').classList.toggle('hidden')" />
+                                     src="{{ request.user.photo.url }}" />
                             {% else %}
-                                <div class="w-10 h-10 rounded-full border-2 border-border-teal bg-surface-container flex items-center justify-center text-primary text-[14px] font-bold uppercase {% if request.user.is_authenticated %}cursor-pointer hover:border-primary transition-colors{% endif %}"
-                                     {% if request.user.is_authenticated %}onclick="document.getElementById('user-dropdown').classList.toggle('hidden')"{% endif %}>
+                                <div class="w-10 h-10 rounded-full border-2 border-border-teal bg-surface-container flex items-center justify-center text-primary text-[14px] font-bold uppercase">
                                     {% if request.user.is_authenticated %}
                                         {{ request.user.first_name|first }}{{ request.user.last_name|first }}
                                     {% else %}
@@ -124,18 +122,14 @@
                                     {% endif %}
                                 </div>
                             {% endif %}
-                            {% if request.user.is_authenticated %}
-                                <!-- Dropdown Menu -->
-                                <div id="user-dropdown"
-                                     class="hidden absolute right-0 top-full mt-2 w-48 bg-surface rounded-lg shadow-lg border border-border-teal py-2 z-50">
-                                    <a href="#"
-                                       class="w-full text-left px-4 py-2 text-on-surface hover:bg-surface-container-highest transition-colors flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-[20px]">logout</span>
-                                        Logout
-                                    </a>
-                                </div>
-                            {% endif %}
                         </div>
+                        {% if request.user.is_authenticated %}
+                            <a href="{% url 'users:logout' %}"
+                               class="ml-2 flex items-center gap-2 px-4 py-2 rounded-full border border-border-teal text-on-surface-variant hover:text-red-600 hover:border-red-200 hover:bg-red-200 transition-all font-medium text-sm">
+                                <span class="material-symbols-outlined text-[18px]">logout</span>
+                                Logout
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
             </header>
