@@ -1,0 +1,548 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}NordPet - Dashboard{% endblock %}
+{% block content %}
+    {% if request.user.role != 'VET' %}
+        <!-- Main Content Area -->
+        <div class="flex-1 px-4 md:px-6 pb-12 max-w-7xl mx-auto w-full mt-8">
+            <!-- Header Section -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-primary mb-1">Dashboard</h2>
+                </div>
+                <div class="flex gap-4 w-full md:w-auto">
+                    <a href="#"
+                       class="flex-1 md:flex-none bg-primary text-on-primary font-semibold text-sm rounded-full py-2 px-6 flex items-center justify-center gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all">
+                        <span class="material-symbols-outlined text-[20px]">add</span>
+                        New Appointment
+                    </a>
+                </div>
+            </div>
+            <!-- Row 1: Operational Summary Cards (Bento Grid Style) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <!-- Awaiting Screening -->
+                <a href="#"
+                   class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 h-full flex flex-col justify-between hover:border-primary hover:shadow-md transition-all cursor-pointer group relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out">
+                    </div>
+                    <div class="flex items-start justify-between relative z-10">
+                        <div>
+                            <div class="flex items-center gap-1.5 mb-1.5">
+                                <span class="w-2 h-2 rounded-full bg-warning-amber animate-pulse"></span>
+                                <p class="text-[11px] text-gray-500 tracking-wider">Action Required</p>
+                            </div>
+                            <div class="flex items-baseline gap-2">
+                                <h3 class="text-[42px] font-bold text-primary leading-none">{{ awaiting_triage }}</h3>
+                                <span class="text-[13px] text-gray-600 font-medium">Patients</span>
+                            </div>
+                            <p class="text-[12px] text-gray-500 mt-1">Awaiting triage evaluation</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors shadow-sm">
+                            <span class="material-symbols-outlined text-[24px]">stethoscope</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-200/50 flex items-center justify-between text-[13px] font-bold text-primary group-hover:text-primary transition-colors relative z-10">
+                        <span>Click to view and screen</span>
+                        <span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </div>
+                </a>
+                <!-- Triage Distribution -->
+                <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg h-full flex flex-col justify-center">
+                    <p class="text-[12px] text-gray-500 mb-2">Triage Risk Distribution</p>
+                    <div class="h-12 flex items-end gap-2">
+                        <!-- Fake chart bars -->
+                        <div class="flex-1 flex flex-col justify-end gap-1 group h-full">
+                            <div class="h-[{% if red_pct %}{{ red_pct }}{% else %}2{% endif %}%] bg-error-red rounded-t-sm group-hover:opacity-80 transition-opacity min-h-[2px]">
+                            </div>
+                            <span class="text-[10px] font-bold text-center text-gray-500 uppercase">Red</span>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end gap-1 group h-full">
+                            <div class="h-[{% if orange_pct %}{{ orange_pct }}{% else %}2{% endif %}%] bg-warning-amber rounded-t-sm group-hover:opacity-80 transition-opacity min-h-[2px]">
+                            </div>
+                            <span class="text-[10px] font-bold text-center text-gray-500 uppercase">Org</span>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end gap-1 group h-full">
+                            <div class="h-[{% if yellow_pct %}{{ yellow_pct }}{% else %}2{% endif %}%] bg-secondary-container rounded-t-sm group-hover:opacity-80 transition-opacity min-h-[2px]">
+                            </div>
+                            <span class="text-[10px] font-bold text-center text-gray-500 uppercase">Yel</span>
+                        </div>
+                        <div class="flex-1 flex flex-col justify-end gap-1 group h-full">
+                            <div class="h-[{% if green_pct %}{{ green_pct }}{% else %}2{% endif %}%] bg-success-green rounded-t-sm group-hover:opacity-80 transition-opacity min-h-[2px]">
+                            </div>
+                            <span class="text-[10px] font-bold text-center text-gray-500 uppercase">Grn</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Today's Operational Summary -->
+                <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg h-full flex flex-col justify-center">
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="text-[12px] text-gray-500">Today's Operational Summary</p>
+                        <span class="material-symbols-outlined text-primary text-[20px]">assignment</span>
+                    </div>
+                    <div class="space-y-2 mt-1">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-success-green text-[16px]">check_circle</span>
+                                <p class="text-[13px] text-gray-900 font-medium">Completed</p>
+                            </div>
+                            <span class="font-bold text-[13px] text-gray-900">{{ completed_appts }} pet{{ completed_appts|pluralize }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-gray-500 text-[16px]">cancel</span>
+                                <p class="text-[13px] text-gray-900 font-medium">Canceled</p>
+                            </div>
+                            <span class="font-bold text-[13px] text-gray-900">{{ canceled_appts }} pet{{ canceled_appts|pluralize }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-error-red text-[16px]">emergency</span>
+                                <p class="text-[13px] text-gray-900 font-medium">Emergencies</p>
+                            </div>
+                            <span class="font-bold text-[13px] text-gray-900">{{ total_emergencies }} pet{{ total_emergencies|pluralize }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-gray-500 text-[16px]">calendar_clock</span>
+                                <p class="text-[13px] text-gray-900 font-medium">Scheduled Remaining</p>
+                            </div>
+                            <span class="font-bold text-[13px] text-gray-900">{{ scheduled_appts }} pet{{ scheduled_appts|pluralize }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Main Layout Split -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Urgent Triage Panel (Takes up 2 cols on lg) -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-2xl text-gray-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-error-red">emergency</span>
+                                Emergency Board
+                            </h3>
+                        </div>
+                        <div class="space-y-0">
+                            {% for appt in emergency_appointments %}
+                                <div class="py-4 border-b border-gray-200 flex items-center justify-between group hover:bg-gray-50 transition-colors rounded-sm px-2 -mx-2">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-full bg-error-red flex-shrink-0 shadow-sm flex items-center justify-center text-white">
+                                            <span class="material-symbols-outlined text-[20px]">warning</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-lg text-gray-900">{{ appt.animal.name }}</h4>
+                                            <div class="flex flex-col mt-0.5">
+                                                <p class="text-sm text-gray-600 flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[14px]">pets</span> {{ appt.animal.specie|title }} • {{ appt.animal.breed }}
+                                                </p>
+                                                <p class="text-sm text-error-red flex items-center gap-1 font-bold">
+                                                    <span class="material-symbols-outlined text-[14px]">schedule</span> Emergency Appointment at {{ appt.scheduled_at|date:"H:i" }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <form method="POST" action="#" class="m-0">
+                                            {% csrf_token %}
+                                            <button type="submit"
+                                                    onclick="return confirm('Are you sure you want to cancel this emergency appointment?');"
+                                                    class="bg-gray-100 hover:bg-error-red hover:text-white text-error-red rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-sm"
+                                                    title="Cancel Appointment">
+                                                <span class="material-symbols-outlined text-[20px]">close</span>
+                                            </button>
+                                        </form>
+                                        <a href="#"
+                                           class="bg-gray-100 hover:bg-primary hover:text-white text-primary rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-sm"
+                                           title="Edit Appointment">
+                                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                                        </a>
+                                        <a href="#"
+                                           class="bg-gray-200 hover:bg-error-red hover:text-white text-error-red rounded-full px-6 py-2 font-semibold text-sm transition-colors text-center">
+                                            Open Patient
+                                        </a>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="py-8 text-center text-gray-600 ">
+                                    <span class="material-symbols-outlined text-4xl mb-2 text-gray-500">check_circle</span>
+                                    <p>No emergencies today.</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Column: Agenda & Secondary Tasks -->
+                <div class="space-y-6">
+                    <!-- Personal Agenda Card -->
+                    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                        <h3 class="font-bold text-xl text-gray-900 mb-4">Today's Appointments</h3>
+                        <div class="space-y-2">
+                            {% for appt in today_appointments %}
+                                <div class="flex gap-2 relative">
+                                    <div class="flex flex-col items-center mt-2">
+                                        <div class="w-2.5 h-2.5 rounded-full {% if appt.status == 'scheduled' %}bg-border-teal{% elif appt.status == 'in_progress' %}bg-warning-amber{% elif appt.status == 'completed' %}bg-primary{% else %}bg-outline{% endif %} z-10">
+                                        </div>
+                                        {% if not forloop.last %}
+                                            <div class="w-[2px] h-full bg-border-teal absolute top-4 left-[4px] -z-0"></div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="bg-gray-100-{% if appt.status == 'completed' %}low{% else %}lowest{% endif %} rounded-lg py-2 px-4 flex-1 border border-{% if appt.status == 'completed' %}transparent{% else %}border-teal{% endif %} hover:border-primary-container transition-colors cursor-pointer"
+                                         onclick="">
+                                        <div class="flex justify-between items-center mb-0.5">
+                                            <span class="font-bold text-[12px] {% if appt.status == 'completed' %}text-primary{% else %}text-gray-500{% endif %} tracking-wide">{{ appt.scheduled_at|date:"h:i A" }}</span>
+                                            {% if appt.status == 'completed' %}
+                                                <span class="bg-success-green/20 text-success-green border border-success-green/30 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">check_circle</span> COMPLETED</span>
+                                            {% elif appt.status == 'in_progress' %}
+                                                <span class="bg-warning-amber/20 text-orange-600 border border-warning-amber/30 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">sync</span> IN PROGRESS</span>
+                                            {% else %}
+                                                <span class="{% if appt.reason == 'routine' %}bg-success-green text-white{% elif appt.reason == 'vaccine' %}bg-primary text-white{% elif appt.reason == 'illness' %}bg-warning-amber text-gray-900{% elif appt.reason == 'emergency' %}bg-error-red text-white{% elif appt.reason == 'surgery' %}bg-error-container text-on-error-container{% elif appt.reason == 'followup' %}bg-info-blue text-white{% else %}bg-gray-100 text-gray-900{% endif %} text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">{{ appt.get_reason_display }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <h4 class="text-[15px] font-semibold text-gray-900">{{ appt.animal.name }}</h4>
+                                        <div class="flex items-end justify-between mt-1">
+                                            <div>
+                                                <p class="text-[12px] text-gray-500 flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[14px]">person</span> Owner: {{ appt.animal.owner.name }}
+                                                </p>
+                                                <p class="text-[12px] text-gray-500 flex items-center gap-1 mt-0.5">
+                                                    <span class="material-symbols-outlined text-[14px]">stethoscope</span> Dr. {{ appt.veterinarian.first_name }} {{ appt.veterinarian.last_name }}
+                                                </p>
+                                            </div>
+                                            {% if appt.status == 'completed' or appt.status == 'in_progress' %}
+                                                <!-- Hide triage info for completed or in-progress appointments -->
+                                            {% else %}
+                                                {% if appt.has_triage_today and appt.triage_risk_level %}
+                                                    <div class="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border {% if appt.triage_risk_level == 'red' %}text-error-red bg-error-red/10 border-error-red/20 {% elif appt.triage_risk_level == 'orange' %}text-orange-600 bg-orange-600/10 border-orange-600/20 {% elif appt.triage_risk_level == 'yellow' %}text-warning-amber bg-warning-amber/10 border-warning-amber/20 {% else %}text-success-green bg-success-green/10 border-success-green/20{% endif %}"
+                                                         title="Risk Level: {{ appt.triage_risk_level|title }}">
+                                                        <span class="material-symbols-outlined text-[12px]">
+                                                            {% if appt.triage_risk_level == 'red' or appt.triage_risk_level == 'orange' %}warning{% else %}check_circle{% endif %}
+                                                        </span>
+                                                        <span>Risk: {{ appt.triage_risk_level|title }}</span>
+                                                    </div>
+                                                {% elif appt.has_triage_today %}
+                                                    <div class="flex items-center gap-1 text-[10px] font-bold text-success-green bg-success-green/10 px-2 py-0.5 rounded-full border border-success-green/20"
+                                                         title="Triage Completed">
+                                                        <span class="material-symbols-outlined text-[12px]">check_circle</span>
+                                                        <span>Triage completed</span>
+                                                    </div>
+                                                {% else %}
+                                                    <a href="#"
+                                                       onclick="event.stopPropagation();"
+                                                       class="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary-container/30 hover:bg-primary hover:text-white px-2 py-0.5 rounded-full border border-primary/20 transition-all z-20 shadow-sm hover:shadow"
+                                                       title="Start Triage">
+                                                        <span class="material-symbols-outlined text-[12px]">stethoscope</span>
+                                                        <span>TRIAGE</span>
+                                                    </a>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="py-8 text-center text-gray-600 ">
+                                    <span class="material-symbols-outlined text-4xl mb-2 text-gray-500">calendar_clock</span>
+                                    <p>No appointments today.</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <a href="#"
+                           class="block text-center w-full mt-4 py-2 text-primary font-semibold text-sm hover:bg-gray-50 rounded-full transition-colors cursor-pointer">
+                            View Full Calendar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    {% else %}
+        <!-- Veterinarian Dashboard -->
+        <div class="flex-1 px-4 md:px-6 pb-12 max-w-7xl mx-auto w-full mt-8">
+            <!-- Header Section -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-primary mb-1">Veterinarian Dashboard</h2>
+                </div>
+                <div class="flex gap-4 w-full md:w-auto">
+                    <a href="#"
+                       class="flex-1 md:flex-none bg-primary text-on-primary font-semibold text-sm rounded-full py-2 px-6 flex items-center justify-center gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all">
+                        <span class="material-symbols-outlined text-[20px]">add</span>
+                        New Appointment
+                    </a>
+                </div>
+            </div>
+            <!-- Row 1: My Day Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-warning-amber/20 flex items-center justify-center text-warning-amber">
+                        <span class="material-symbols-outlined">hourglass_top</span>
+                    </div>
+                    <div>
+                        <p class="text-[12px] text-gray-500">Awaiting Triage</p>
+                        <h3 class="text-[24px] font-bold text-primary leading-none">{{ awaiting_triage }}</h3>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-success-green/20 flex items-center justify-center text-success-green">
+                        <span class="material-symbols-outlined">stethoscope</span>
+                    </div>
+                    <div>
+                        <p class="text-[12px] text-gray-500">In Progress</p>
+                        <h3 class="text-[24px] font-bold text-primary leading-none">{{ in_progress_appts }}</h3>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-info-blue/20 flex items-center justify-center text-info-blue">
+                        <span class="material-symbols-outlined">biotech</span>
+                    </div>
+                    <div>
+                        <p class="text-[12px] text-gray-500">Pending Exams</p>
+                        <h3 class="text-[24px] font-bold text-primary leading-none">{{ pending_exams_count }}</h3>
+                    </div>
+                </div>
+            </div>
+            <!-- Main Layout Split -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Queue & AI Status -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Emergency Board -->
+                    {% if emergency_appointments %}
+                        <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="font-bold text-2xl text-gray-900 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-error-red">warning</span>
+                                    Emergency Board
+                                </h3>
+                            </div>
+                            <div class="space-y-0">
+                                {% for appt in emergency_appointments %}
+                                    <div class="py-4 border-b border-gray-200 flex items-center justify-between group hover:bg-gray-50 transition-colors rounded-sm px-2 -mx-2">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-10 h-10 rounded-full bg-error-red flex-shrink-0 shadow-sm flex items-center justify-center text-white">
+                                                <span class="material-symbols-outlined text-[20px]">warning</span>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-lg text-gray-900">
+                                                    <a href="#" class="hover:underline hover:text-primary transition-colors">{{ appt.animal.name }}</a>
+                                                </h4>
+                                                <div class="flex flex-col mt-0.5">
+                                                    <p class="text-sm text-gray-600 flex items-center gap-1">
+                                                        <span class="material-symbols-outlined text-[14px]">pets</span> {{ appt.animal.specie|title }} &bull; {{ appt.animal.breed }}
+                                                    </p>
+                                                    <p class="text-sm text-error-red flex items-center gap-1 font-bold">
+                                                        <span class="material-symbols-outlined text-[14px]">schedule</span> Emergency Appointment at {{ appt.scheduled_at|date:"H:i" }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% if appt.status == 'completed' %}
+                                            <span class="bg-gray-200 text-success-green text-xs uppercase tracking-wide font-bold px-4 py-2 rounded-full flex items-center gap-1 self-center">
+                                                <span class="material-symbols-outlined text-[18px]">task_alt</span> Completed
+                                            </span>
+                                        {% else %}
+                                            <div class="flex items-center gap-2">
+                                                <form method="POST" action="#" class="m-0">
+                                                    {% csrf_token %}
+                                                    <button type="submit"
+                                                            onclick="return confirm('Are you sure you want to cancel this emergency appointment?');"
+                                                            class="bg-gray-100 hover:bg-error-red hover:text-white text-error-red rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-sm"
+                                                            title="Cancel Appointment">
+                                                        <span class="material-symbols-outlined text-[20px]">close</span>
+                                                    </button>
+                                                </form>
+                                                <a href="#"
+                                                   class="bg-gray-100 hover:bg-primary hover:text-white text-primary rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-sm"
+                                                   title="Edit Appointment">
+                                                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                                                </a>
+                                                {% if appt.status == 'in_progress' %}
+                                                    <a href="#"
+                                                       class="bg-warning-amber text-gray-900 hover:bg-warning-amber/80 rounded-full px-6 py-2 font-semibold text-sm transition-colors text-center flex items-center gap-1">
+                                                        <span class="material-symbols-outlined text-[18px]">sync</span> In progress...
+                                                    </a>
+                                                {% else %}
+                                                    <a href="#"
+                                                       class="bg-gray-200 hover:bg-error-red hover:text-white text-error-red rounded-full px-6 py-2 font-semibold text-sm transition-colors text-center">
+                                                        Start Consultation
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    <!-- Real-time Queue -->
+                    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-2xl text-gray-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-error-red">list</span>
+                                Queue
+                            </h3>
+                        </div>
+                        <div class="space-y-4">
+                            {% for triage in urgent_triages %}
+                                <div class="border border-gray-200 rounded-lg p-4 flex items-start gap-4 hover:shadow-md transition-shadow bg-white relative overflow-hidden">
+                                    <!-- Left color bar -->
+                                    <div class="absolute left-0 top-0 bottom-0 w-2 {% if triage.risk_level == 'red' %}bg-error-red{% elif triage.risk_level == 'orange' %}bg-warning-amber{% elif triage.risk_level == 'yellow' %}bg-secondary-container{% else %}bg-success-green{% endif %}">
+                                    </div>
+                                    <div class="pl-2 flex-1">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h4 class="font-bold text-xl text-primary m-0 flex items-center gap-2">
+                                                    <a href="#"
+                                                       class="hover:underline hover:text-primary-container transition-colors">{{ triage.animal.name }}</a>
+                                                    <span class="text-[10px] bg-gray-100 text-gray-900 px-2 py-0.5 rounded-full">{{ triage.animal.specie|title }}</span>
+                                                </h4>
+                                                <p class="text-[12px] text-gray-500 mt-0.5 flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[14px]">schedule</span> {{ triage.created_at|timesince }} waiting
+                                                </p>
+                                            </div>
+                                            {% if triage.appt_status == 'completed' %}
+                                                <span class="bg-gray-200 text-success-green text-xs uppercase tracking-wide font-bold px-4 py-2 rounded-full flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[18px]">task_alt</span> Completed
+                                                </span>
+                                            {% elif triage.appt_status == 'in_progress' %}
+                                                <a href="#"
+                                                   class="bg-warning-amber text-gray-900 hover:bg-warning-amber/80 rounded-full px-6 py-2 font-semibold text-sm transition-colors flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[18px]">sync</span> In progress...
+                                                </a>
+                                            {% else %}
+                                                <a href="#"
+                                                   class="bg-primary-container text-on-primary-container hover:bg-primary hover:text-white rounded-full px-6 py-2 font-semibold text-sm transition-colors flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[18px]">play_arrow</span> Start Consultation
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-sm text-gray-600 mb-4"><span class="font-semibold text-gray-900">Complaint:</span> {{ triage.complaint }}</p>
+                                        <div class="flex flex-wrap gap-2">
+                                            <!-- Vitals - Highlight if seemingly out of bounds -->
+                                            <div class="bg-surface flex items-center gap-2 px-3 py-1.5 rounded-md border {% if triage.temperature > 39.5 or triage.temperature < 37.0 %}border-error-red text-error-red{% else %}border-gray-200 text-gray-900{% endif %}">
+                                                <span class="material-symbols-outlined text-[16px]">device_thermostat</span>
+                                                <span class="font-bold text-[13px]">{{ triage.temperature }} &deg;C</span>
+                                            </div>
+                                            <div class="bg-surface flex items-center gap-2 px-3 py-1.5 rounded-md border {% if triage.heart_rate > 160 or triage.heart_rate < 60 %}border-error-red text-error-red{% else %}border-gray-200 text-gray-900{% endif %}">
+                                                <span class="material-symbols-outlined text-[16px]">monitor_heart</span>
+                                                <span class="font-bold text-[13px]">{{ triage.heart_rate }} BPM</span>
+                                            </div>
+                                            <div class="bg-surface flex items-center gap-2 px-3 py-1.5 rounded-md border {% if triage.respiratory_rate > 40 or triage.respiratory_rate < 10 %}border-error-red text-error-red{% else %}border-gray-200 text-gray-900{% endif %}">
+                                                <span class="material-symbols-outlined text-[16px]">air</span>
+                                                <span class="font-bold text-[13px]">{{ triage.respiratory_rate }} rpm</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="py-8 text-center text-gray-600 ">
+                                    <span class="material-symbols-outlined text-4xl mb-2 text-gray-500">check_circle</span>
+                                    <p>No patients in the queue.</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <!-- AI Processing Panel (Mock) -->
+                    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-xl text-gray-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">cognition_2</span>
+                                AI Background Tasks
+                            </h3>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="bg-surface flex items-center justify-between p-2 rounded-md border border-gray-200">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-8 h-8 rounded-full bg-success-green/20 flex items-center justify-center text-success-green">
+                                        <span class="material-symbols-outlined text-[16px]">check</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-[13px] text-gray-900">The consultation audio for <strong>Rex (Dog)</strong> was transcribed and the summary is ready.</p>
+                                        <span class="text-[10px] text-gray-500">2 mins ago</span>
+                                    </div>
+                                </div>
+                                <button class="text-primary hover:text-primary-container text-[12px] font-semibold underline">View Summary</button>
+                            </div>
+                            <div class="bg-surface flex items-center justify-between p-2 rounded-md border border-gray-200">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-8 h-8 rounded-full bg-success-green/20 flex items-center justify-center text-success-green">
+                                        <span class="material-symbols-outlined text-[16px]">check</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-[13px] text-gray-900">Blood test OCR for <strong>Luna (Cat)</strong> completed. Interpretation available.</p>
+                                        <span class="text-[10px] text-gray-500">15 mins ago</span>
+                                    </div>
+                                </div>
+                                <button class="text-primary hover:text-primary-container text-[12px] font-semibold underline">View Results</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Column: Agenda & Secondary Tasks -->
+                <div class="space-y-6">
+                    <!-- AI Clinical Assistant (Mock) -->
+                    <div class="bg-gray-200 rounded-lg p-6 shadow-sm border border-primary/30 relative overflow-hidden">
+                        <div class="absolute right-0 top-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                        <h3 class="font-bold text-xl text-primary mb-4 flex items-center gap-2 relative z-10">
+                            <span class="material-symbols-outlined">auto_awesome</span>
+                            Clinical Assistant
+                        </h3>
+                        <p class="text-[12px] text-gray-600 mb-4 relative z-10">Quickly search FDA guidelines, medication dosages, and clinical protocols.</p>
+                        <div class="relative z-10">
+                            <input type="text"
+                                   class="w-full rounded-full border-gray-200 bg-white pl-4 pr-8 py-2 text-[13px] focus:ring-primary focus:border-primary"
+                                   placeholder="e.g., Cephalexin dosage for felines...">
+                            <button class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-container transition-colors">
+                                <span class="material-symbols-outlined text-[16px]">send</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Personal Agenda Card -->
+                    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                        <h3 class="font-bold text-xl text-gray-900 mb-4">Upcoming Appointments</h3>
+                        <div class="space-y-2">
+                            {% for appt in today_appointments|slice:":4" %}
+                                <div class="flex gap-2 relative">
+                                    <div class="flex flex-col items-center mt-2">
+                                        <div class="w-2.5 h-2.5 rounded-full {% if appt.status == 'scheduled' %}bg-border-teal{% elif appt.status == 'in_progress' %}bg-warning-amber{% elif appt.status == 'completed' %}bg-primary{% else %}bg-outline{% endif %} z-10">
+                                        </div>
+                                        {% if not forloop.last %}
+                                            <div class="w-[2px] h-full bg-border-teal absolute top-4 left-[4px] -z-0"></div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="bg-gray-100-{% if appt.status == 'completed' %}low{% else %}lowest{% endif %} rounded-lg py-2 px-4 flex-1 border border-{% if appt.status == 'completed' %}transparent{% else %}border-teal{% endif %} hover:border-primary-container transition-colors cursor-pointer"
+                                         onclick="">
+                                        <div class="flex justify-between items-center mb-0.5">
+                                            <span class="font-bold text-[12px] {% if appt.status == 'completed' %}text-primary{% else %}text-gray-500{% endif %} tracking-wide">{{ appt.scheduled_at|date:"h:i A" }}</span>
+                                            <span class="{% if appt.reason == 'routine' %}bg-success-green text-white{% elif appt.reason == 'vaccine' %}bg-primary text-white{% elif appt.reason == 'illness' %}bg-warning-amber text-gray-900{% elif appt.reason == 'emergency' %}bg-error-red text-white{% elif appt.reason == 'surgery' %}bg-error-container text-on-error-container{% elif appt.reason == 'followup' %}bg-info-blue text-white{% else %}bg-gray-100 text-gray-900{% endif %} text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">{{ appt.get_reason_display }}</span>
+                                        </div>
+                                        <h4 class="text-[15px] font-semibold text-gray-900">{{ appt.animal.name }}</h4>
+                                        <p class="text-[12px] text-gray-500 flex items-center gap-1 mt-1">
+                                            <span class="material-symbols-outlined text-[14px]">person</span> {{ appt.animal.owner.name }}
+                                        </p>
+                                        {% if appt.status != 'completed' and appt.status != 'in_progress' and not appt.has_triage_today %}
+                                            <div class="mt-2">
+                                                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-error-red bg-error-red/10 px-2 py-0.5 rounded-full border border-error-red/20"
+                                                      title="Awaiting Triage">
+                                                    <span class="material-symbols-outlined text-[12px]">pending_actions</span>
+                                                    AWAITING TRIAGE
+                                                </span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="py-8 text-center text-gray-600 ">
+                                    <span class="material-symbols-outlined text-4xl mb-2 text-gray-500">calendar_clock</span>
+                                    <p>No appointments today.</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <a href="#"
+                           class="block text-center w-full mt-4 py-2 text-primary font-semibold text-sm hover:bg-gray-50 rounded-full transition-colors cursor-pointer">
+                            View Full Calendar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

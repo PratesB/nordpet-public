@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'users'
 ]
 
 MIDDLEWARE = [
@@ -40,6 +41,9 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'core.urls'
+
+# Custom user model
+AUTH_USER_MODEL = 'users.User'
 
 TEMPLATES = [
     {
@@ -113,3 +117,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # MEDIA
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+
+# Messages
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.DEBUG: 'bg-surface-variant text-on-surface',
+    messages.INFO: 'bg-info-blue text-white',
+    messages.SUCCESS: 'bg-success-green text-white',
+    messages.WARNING: 'bg-warning-amber text-white',
+    messages.ERROR: 'bg-error-red text-white',
+}

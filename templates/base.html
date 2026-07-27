@@ -1,0 +1,163 @@
+{% load static %}
+<!DOCTYPE html>
+<html class="light" lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+        <title>{% block title %}NordPet{% endblock %}</title>
+        <!-- Material Symbols -->
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+              rel="stylesheet" />
+        <!-- Google Fonts -->
+        <link href="https://fonts.googleapis.com" rel="preconnect" />
+        <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Quicksand:wght@700&amp;display=swap"
+              rel="stylesheet" />
+        <!-- Tailwind CSS -->
+        <link rel="stylesheet" href="{% static 'css/output.css' %}">
+        {% block extra_head %}{% endblock %}
+    </head>
+    <body class="bg-background text-on-background font-body-md min-h-screen flex">
+        <!-- SideNavBar -->
+        <aside class="bg-mint-bg fixed left-0 top-0 h-screen w-[260px] shadow-md flex flex-col py-6 border-r border-border-teal z-20">
+            <!-- Brand Header -->
+            <div class="px-6 mb-8 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold font-headline-md text-headline-md">
+                    <span class="material-symbols-outlined text-[28px]" data-weight="fill">pets</span>
+                </div>
+                <div>
+                    <h1 class="font-headline-md text-headline-md font-bold text-primary">NordPet</h1>
+                    <p class="font-body-sm text-body-sm text-on-surface-variant">Veterinary Care</p>
+                </div>
+            </div>
+            <!-- Navigation Tabs -->
+            <nav class="flex-1 px-2 space-y-2">
+                {% block sidebar_nav %}
+                    <!-- Dashboard -->
+                    <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'dashboard' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
+                       href="{% url 'users:dashboard'%}">   
+                        <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                        Dashboard
+                    </a>
+                    <!-- Patients -->
+                    <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'patients' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
+                       href="#">
+                        <span class="material-symbols-outlined" data-icon="pets">pets</span>
+                        Patients
+                    </a>
+                    <!-- Appointments -->
+                    <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'appointments' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
+                       href="#">
+                        <span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+                        Appointments
+                    </a>
+                    <!-- Settings -->
+                    <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'settings' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
+                       href="#">
+                        <span class="material-symbols-outlined" data-icon="settings">settings</span>
+                        Settings
+                    </a>
+                    {% if request.user.is_authenticated and request.user.role == 'ADM' %}
+                        <!-- Team Members (Admin Only) -->
+                        <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'team' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
+                           href="{% url 'users:team'%}">
+                            <span class="material-symbols-outlined" data-icon="person">person</span>
+                            Team Members
+                        </a>
+                    {% endif %}
+                {% endblock %}
+            </nav>
+            <!-- CTA -->
+            <div class="px-6 mt-auto">
+                <a class="w-full bg-secondary-container text-on-secondary-container font-button-text text-button-text rounded-full py-4 px-6 flex items-center justify-center gap-2 hover:shadow-lg hover:-translate-y-1 transition-all"
+                   href="#">
+                    <span class="material-symbols-outlined text-[20px]">person_add</span>
+                    New Client
+                </a>
+            </div>
+        </aside>
+        <!-- Main Content Area -->
+        <main class="flex-1 ml-[260px] flex flex-col min-h-screen">
+            <!-- TopNavBar -->
+            <header class="bg-surface fixed top-0 right-0 w-[calc(100%-260px)] h-16 shadow-sm flex justify-between items-center px-6 z-10">
+                <div class="flex items-center gap-4">
+                    {% block topbar_search %}{% endblock %}
+                </div>
+                <div class="flex items-center gap-6">
+                    <!-- Live Clock -->
+                    <div class="flex flex-col text-right justify-center">
+                        <span id="clock-time"
+                              class="font-headline-sm text-[18px] font-bold text-primary leading-none"></span>
+                        <span id="clock-date"
+                              class="font-body-sm text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mt-1"></span>
+                    </div>
+                    <div class="relative flex items-center gap-4 border-l border-border-teal pl-6">
+                        <div class="text-right">
+                            <p class="font-headline-sm text-headline-sm font-bold text-primary">
+                                {% if request.user.is_authenticated %}
+                                    {{ request.user.first_name }} {{ request.user.last_name }}
+                                {% else %}
+                                    NordPet User
+                                {% endif %}
+                            </p>
+                            <p class="font-body-sm text-body-sm text-on-surface-variant">
+                                {% if request.user.is_authenticated %}
+                                    {{ request.user.get_role_display }}
+                                {% else %}
+                                    Profile
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            {% if request.user.is_authenticated and request.user.photo %}
+                                <img class="w-10 h-10 rounded-full object-cover border-2 border-border-teal"
+                                     alt="Profile"
+                                     src="{{ request.user.photo.url }}" />
+                            {% else %}
+                                <div class="w-10 h-10 rounded-full border-2 border-border-teal bg-surface-container flex items-center justify-center text-primary text-[14px] font-bold uppercase">
+                                    {% if request.user.is_authenticated %}
+                                        {{ request.user.first_name|first }}{{ request.user.last_name|first }}
+                                    {% else %}
+                                        <span class="material-symbols-outlined text-[20px]">person</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% if request.user.is_authenticated %}
+                            <a href="{% url 'users:logout' %}"
+                               class="ml-2 flex items-center gap-2 px-4 py-2 rounded-full border border-border-teal text-on-surface-variant hover:text-red-600 hover:border-red-200 hover:bg-red-200 transition-all font-medium text-sm">
+                                <span class="material-symbols-outlined text-[18px]">logout</span>
+                                Logout
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </header>
+            <!-- Page Content -->
+            <div class="flex-1 mt-16 p-8 overflow-y-auto">
+                {% if messages %}
+                    <div class="mb-4 space-y-2">
+                        {% for message in messages %}
+                            <div class="px-4 py-2 rounded-lg {{ message.tags }} font-body-sm font-medium shadow-sm flex items-center gap-2">
+                                {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                                {% elif message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                                    <span class="material-symbols-outlined text-[20px]">error</span>
+                                {% else %}
+                                    <span class="material-symbols-outlined text-[20px]">info</span>
+                                {% endif %}
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% block content %}
+                {% endblock %}
+            </div>
+        </main>
+        {% block modals %}{% endblock %}
+        <!-- Live Clock Script -->
+        <script src="{% static 'js/main.js' %}"></script>
+        {% block extra_scripts %}{% endblock %}
+    </body>
+</html>
