@@ -1,36 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-</head>
-<body>
-    <h2>Login</h2>
+{% extends 'auth-base.html' %}
+{% load static %}
 
-    {% if messages %}
-        <ul style="color: red;">
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+{% block title %}NordPet Login{% endblock %}
 
-    <form method="POST" action="{% url 'users:login' %}">
-        {% csrf_token %}
+{% block content %}
+<main class="w-full max-w-md mx-auto">
+    <!-- Logo and Heading -->
+    <div class="text-center mb-8">
+        <div class="flex justify-center items-center gap-2 mb-2">
+            <span class="material-symbols-outlined text-[40px] text-primary" style="font-variation-settings: 'FILL' 1;">pets</span>
+            <h1 class="text-4xl font-bold text-primary tracking-tight">NordPet</h1>
+        </div>
+        <p class="text-[18px] text-gray-600">Welcome Back</p>
+    </div>
+
+    <!-- White Login Card -->
+    <div class="bg-white rounded-[32px] shadow-sm p-10 flex flex-col gap-8 w-full border border-gray-100">
         
-        <div>
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-        </div>
-        <br>
-        <div>
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-        <br>
-        <button type="submit">Login</button>
-    </form>
+        <form action="{% url 'users:login' %}" class="flex flex-col gap-6" method="POST">
+            {% csrf_token %}
+            
+            <!-- Email Input -->
+            <div class="flex flex-col gap-2">
+                <label class="text-sm font-medium text-gray-700 ml-2" for="email">Email Address</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">mail</span>
+                    <input class="w-full rounded-full border border-gray-300 bg-white pl-[48px] pr-4 py-3 text-base text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" id="email" name="email" placeholder="veterinarian@nordpet.com" required="" type="email"/>
+                </div>
+            </div>
 
-</body>
-</html>
+            <!-- Password Input -->
+            <div class="flex flex-col gap-2">
+                <div class="flex justify-between items-center px-2">
+                    <label class="text-sm font-medium text-gray-700" for="password">Password</label>
+                    <a class="text-sm text-primary hover:text-teal-700 font-medium transition-colors" href="#">Forgot?</a>
+                </div>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
+                    <input class="w-full rounded-full border border-gray-300 bg-white pl-[48px] pr-4 py-3 text-base text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button class="mt-2 w-full bg-primary text-white font-semibold text-lg rounded-full py-3.5 hover:bg-teal-700 transition-all duration-200 cursor-pointer" type="submit">
+                Login
+            </button>
+        </form>
+
+        <div class="relative flex items-center py-2">
+            <div class="flex-grow border-t border-gray-200"></div>
+            <span class="flex-shrink-0 mx-4 text-sm text-gray-400">or</span>
+            <div class="flex-grow border-t border-gray-200"></div>
+        </div>
+
+        <!-- Contact Supervisor -->
+        <div class="text-center">
+            <p class="text-[15px] text-gray-600">
+                If you don't have an account, please contact your<br>Supervisor
+            </p>
+        </div>
+    </div>
+
+    <!-- System Version -->
+    <div class="mt-8 text-center">
+        <span class="text-sm text-gray-500">NordPet System v1.0</span>
+    </div>
+</main>
+{% endblock %}
