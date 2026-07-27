@@ -108,7 +108,7 @@
                             <td class="py-4 px-6 text-right">
                                 <div class="flex justify-end gap-1">
                                     {% if request.user.role == 'ADM' %}
-                                        <a href="#" class="p-2 text-gray-400 hover:text-teal-600 rounded-full hover:bg-teal-50 transition-colors" title="Edit">
+                                        <a href="{% url 'users:update_team' member.id %}" class="p-2 text-gray-400 hover:text-teal-600 rounded-full hover:bg-teal-50 transition-colors" title="Edit">
                                             <span class="material-symbols-outlined text-[18px]">edit</span>
                                         </a>
                                         <form action="#" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this team member?');">

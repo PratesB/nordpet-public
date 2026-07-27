@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib import messages
@@ -101,3 +101,36 @@ def team(request):
     members = paginator.get_page(page_number)
     
     return render(request, 'users/team.html', {'members': members})
+
+
+
+@login_required(login_url='users:login')
+def update_team(request, user_id):
+    if request.user.role != 'ADM':
+        messages.error(request, 'Only Administrators can update team members.')
+        return redirect('users:team')
+
+    member = get_object_or_404(User, id=user_id)
+
+    if request.method == 'POST':
+        member.first_name = request.POST.get('first_name')
+        member.last_name = request.POST.get('last_name')
+        member.role = request.POST.get('role')
+        member.phone = request.POST.get('phone')
+        
+        email = request.POST.get('email')
+        if User.objects.filter(email=email).exclude(id=user_id).exists():
+            messages.error(request, 'Email already in use by another user.')
+            return redirect('users:update_team', user_id=user_id)
+            
+        photo = request.FILES.get('photo')
+        if photo:
+            member.photo = photo
+
+        member.email = email
+        member.save()
+        
+        messages.success(request, 'User updated successfully')
+        return redirect('users:team')
+
+    return render(request, 'users/update_team.html', {'member': member})

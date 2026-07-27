@@ -12,4 +12,5 @@ urlpatterns = [
     path('logout/', views.logout, name='logout'),
     path('team/new/', views.register_team, name='register_team'),
     path('team/', views.team, name='team'),
+    path('team/<uuid:user_id>/update/', views.update_team, name='update_team'),
 ]
