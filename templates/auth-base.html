@@ -1,42 +1,22 @@
 {% load static %}
 <!DOCTYPE html>
 <html class="light" lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>{% block title %}NordPet{% endblock %}</title>
-
-    <!-- Material Symbols -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com" rel="preconnect"/>
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Quicksand:wght@700&amp;display=swap" rel="stylesheet"/>
-    
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
-    
-    {% block extra_head %}{% endblock %}
-    
-</head>
-<body class="bg-gradient-to-br from-mint-bg via-background to-surface-container-high min-h-screen flex flex-col items-center justify-center p-md md:p-margin-page text-on-surface">
-    {% if messages %}
-    <div class="fixed top-lg right-lg z-50 flex flex-col gap-sm">
-        {% for message in messages %}
-        <div class="px-md py-sm rounded-lg {{ message.tags }} font-body-sm font-medium shadow-md flex items-center gap-sm animate-fade-in-down">
-            {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
-                <span class="material-symbols-outlined text-[20px]">check_circle</span>
-            {% elif message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-                <span class="material-symbols-outlined text-[20px]">error</span>
-            {% else %}
-                <span class="material-symbols-outlined text-[20px]">info</span>
-            {% endif %}
-            {{ message }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    {% block content %}{% endblock %}
-</body>
+    <head>
+        <meta charset="utf-8" />
+        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+        <title>{% block title %}NordPet{% endblock %}</title>
+        <!-- Material Symbols -->
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+              rel="stylesheet" />
+        <!-- Google Fonts -->
+        <link href="https://fonts.googleapis.com" rel="preconnect" />
+        <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Quicksand:wght@700&amp;display=swap"
+              rel="stylesheet" />
+        <link rel="stylesheet" href="{% static 'css/output.css' %}">
+        {% block extra_head %}{% endblock %}
+    </head>
+    <body class="bg-gradient-to-br from-mint-bg via-background to-gray-200 h-screen w-full flex flex-col items-center justify-center p-4 md:p-10 text-gray-900">
+        {% block content %}{% endblock %}
+    </body>
 </html>

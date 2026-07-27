@@ -56,4 +56,13 @@
   --color-on-primary: #ffffff;
   --color-warning-amber: #F57F17;
 
+
+  /* Custom Typography */
+  --font-body-sm: 'Inter', sans-serif;
+  --font-body-md: 'Inter', sans-serif;
+  --font-headline-sm: 'Quicksand', sans-serif;
+  --font-headline-md: 'Quicksand', sans-serif;
+  --font-headline-lg: 'Quicksand', sans-serif;
+  --font-label-caps: 'Inter', sans-serif;
+  --font-button-text: 'Inter', sans-serif;
 }
