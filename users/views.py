@@ -134,3 +134,21 @@ def update_team(request, user_id):
         return redirect('users:team')
 
     return render(request, 'users/update_team.html', {'member': member})
+
+
+@login_required(login_url='users:login')
+def delete_team_member(request, user_id):
+    if request.user.role != 'ADM':
+        messages.error(request, 'Only Administrators can delete team members.')
+        return redirect('users:team')
+
+    if request.method == 'POST':
+        member = get_object_or_404(User, id=user_id)
+        # Prevent admin from deleting themselves
+        if member == request.user:
+            messages.error(request, 'You cannot delete yourself.')
+        else:
+            member.delete()
+            messages.success(request, 'User deleted successfully')
+            
+    return redirect('users:team')
