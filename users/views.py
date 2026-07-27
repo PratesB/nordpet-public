@@ -8,7 +8,10 @@ from .models import User
 
 
 
-def login(request):        
+def login(request):
+    if request.user.is_authenticated:
+        return redirect('users:dashboard')
+                
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
