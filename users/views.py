@@ -40,7 +40,7 @@ def logout(request):
 
 
 @login_required(login_url='users:login')
-def register_team(request):
+def register_member(request):
     if request.user.role != 'ADM':
         return redirect('users:dashboard')
 
@@ -70,7 +70,7 @@ def register_team(request):
         messages.success(request, 'User created successfully')
         return redirect('users:team')
 
-    return render(request, 'users/register_team.html')
+    return render(request, 'users/register_member.html')
 
 
 
@@ -105,7 +105,7 @@ def team(request):
 
 
 @login_required(login_url='users:login')
-def update_team(request, user_id):
+def update_member(request, user_id):
     if request.user.role != 'ADM':
         messages.error(request, 'Only Administrators can update team members.')
         return redirect('users:team')
@@ -121,7 +121,7 @@ def update_team(request, user_id):
         email = request.POST.get('email')
         if User.objects.filter(email=email).exclude(id=user_id).exists():
             messages.error(request, 'Email already in use by another user.')
-            return redirect('users:update_team', user_id=user_id)
+            return redirect('users:update_member', user_id=user_id)
             
         photo = request.FILES.get('photo')
         if photo:
@@ -133,11 +133,11 @@ def update_team(request, user_id):
         messages.success(request, 'User updated successfully')
         return redirect('users:team')
 
-    return render(request, 'users/update_team.html', {'member': member})
+    return render(request, 'users/update_member.html', {'member': member})
 
 
 @login_required(login_url='users:login')
-def delete_team_member(request, user_id):
+def delete_member(request, user_id):
     if request.user.role != 'ADM':
         messages.error(request, 'Only Administrators can delete team members.')
         return redirect('users:team')
