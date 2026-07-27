@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "dev": "tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch",
+    "dev": "bash start.sh",
+    "tailwind:watch": "tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch",
     "build": "tailwindcss -i ./static/css/input.css -o ./static/css/output.css --minify"
   },
   "dependencies": {
