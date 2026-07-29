@@ -76,7 +76,7 @@ def new_appointment(request):
             # The full_clean() inside save() will trigger all validations
             appointment.save()
             messages.success(request, 'Appointment scheduled successfully!')
-            return HttpResponse("Appointment Dashboard") #TODO: add redirect
+            return redirect('clients:appointments')
 
         except ValidationError as e:
             for field, errors in e.message_dict.items():
@@ -94,7 +94,7 @@ def new_appointment(request):
 
     context = {
         'animals': Animal.objects.all(),
-        'veterinarians': User.objects.filter(role='VET'),
+        'veterinarians': User.objects.filter(role='VET', is_active=True),
         'durations': Appointment.DURATION_CHOICES,
         'reasons': Appointment.REASON_CHOICES,
         'time_slots': time_slots,
@@ -122,7 +122,7 @@ def update_appointment(request, pk):
             
             appointment.save()
             messages.success(request, 'Appointment updated successfully!')
-            return HttpResponse("Appointment Dashboard") #TODO: add redirect
+            return redirect('clients:appointments')
         except ValidationError as e:
             for field, errors in e.message_dict.items():
                 for error in errors:
@@ -150,15 +150,20 @@ def update_appointment(request, pk):
 @login_required(login_url='users:login')
 def cancel_appointment(request, pk):
     if request.method == 'POST':
-        appointment = get_object_or_404(Appointment, pk=pk)
-        appointment.status = 'canceled'
-        appointment.save()
-        messages.success(request, 'Appointment canceled successfully!')
-        referer = request.META.get('HTTP_REFERER')
-        if referer:
-            return redirect(referer)
-        return HttpResponse("Appointment Dashboard")
-    return HttpResponse(status=405)
+        try:
+            appointment = Appointment.objects.filter(pk=pk).first()
+            if appointment:
+                appointment.status = 'canceled'
+                appointment.save()
+                messages.success(request, 'Appointment canceled successfully!')
+            else:
+                messages.error(request, 'Appointment not found.')
+        except Exception as e:
+            messages.error(request, f'An error occurred while canceling: {str(e)}')
+    else:
+        messages.error(request, 'Invalid request method.')
+        
+    return redirect('clients:appointments')
 
 
 @login_required(login_url='users:login')
@@ -208,3 +213,116 @@ def get_available_times(request):
             available_slots.append(slot.strftime("%H:%M"))
 
     return JsonResponse({'available_times': available_slots})
+
+@login_required(login_url='users:login')
+def appointments_dashboard(request):
+    date_str = request.GET.get('date')
+    today = timezone.localdate()
+    
+    if date_str:
+        try:
+            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            target_date = today
+    else:
+        target_date = today
+
+    selected_vet_id = request.GET.get('vet_id', '')
+    vets = User.objects.filter(role='VET', is_active=True)
+
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=7)
+
+    day_appointments = Appointment.objects.filter(
+        scheduled_at__date=target_date,
+        status__in=['scheduled', 'completed']
+    )
+    week_appointments = Appointment.objects.filter(
+        scheduled_at__date__gte=start_of_week,
+        scheduled_at__date__lt=end_of_week,
+        status__in=['scheduled', 'completed']
+    )
+
+    if selected_vet_id:
+        day_appointments = day_appointments.filter(veterinarian_id=selected_vet_id)
+        week_appointments = week_appointments.filter(veterinarian_id=selected_vet_id)
+
+    columns_data = []
+    if selected_vet_id:
+        columns_data.append({
+            'is_today': target_date == today,
+            'label_name': target_date.strftime('%b %d'),
+            'vet_id': selected_vet_id
+        })
+    else:
+        for vet in vets:
+            columns_data.append({
+                'is_today': target_date == today,
+                'label_name': f"Dr. {vet.first_name or vet.email.split('@')[0]}",
+                'vet_id': vet.id
+            })
+
+    grid_rows = []
+    for hour in range(7, 21):
+        cols = []
+        for col_def in columns_data:
+            vet_id = col_def['vet_id']
+            
+            # Use make_aware with the min time
+            hour_start = timezone.make_aware(datetime.combine(target_date, datetime.min.time().replace(hour=hour)))
+            hour_end = hour_start + timedelta(hours=1)
+
+            col_appts_objs = day_appointments.filter(
+                veterinarian_id=vet_id,
+                scheduled_at__gte=hour_start,
+                scheduled_at__lt=hour_end
+            )
+
+            col_appts = []
+            for appt in col_appts_objs:
+                local_dt = timezone.localtime(appt.scheduled_at)
+                minute = local_dt.minute
+                top = minute
+                height = appt.duration
+                
+                col_appts.append({
+                    'obj': appt,
+                    'top': top,
+                    'height': height,
+                    'left_pct': 0,
+                    'width_pct': 100,
+                    'time_str': f"{local_dt.strftime('%H:%M')} - {(local_dt + timedelta(minutes=appt.duration)).strftime('%H:%M')}"
+                })
+            
+            if len(col_appts) > 1:
+                width = 100 / len(col_appts)
+                for i, c_appt in enumerate(col_appts):
+                    c_appt['left_pct'] = i * width
+                    c_appt['width_pct'] = width
+
+            cols.append(col_appts)
+            
+        grid_rows.append({
+            'hour_label': f"{hour:02d}:00",
+            'cols': cols
+        })
+
+    context = {
+        'current_month_year': target_date.strftime('%B %Y'),
+        'prev_date': (target_date - timedelta(days=1)).strftime('%Y-%m-%d'),
+        'today_date': today.strftime('%Y-%m-%d'),
+        'next_date': (target_date + timedelta(days=1)).strftime('%Y-%m-%d'),
+        'relative_label': 'Today' if target_date == today else target_date.strftime('%b %d'),
+        'day_stat_label': 'Today' if target_date == today else 'Selected Day',
+        'day_appointments_count': day_appointments.count(),
+        'week_stat_label': 'This Week',
+        'week_appointments_count': week_appointments.count(),
+        'vet_query': f"&vet_id={selected_vet_id}" if selected_vet_id else "",
+        'vets': vets,
+        'selected_vet_id': selected_vet_id,
+        'view_mode': 'day',
+        'columns_data': columns_data,
+        'grid_rows': grid_rows
+    }
+
+    return render(request, 'clients/appointments.html', context)

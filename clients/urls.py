@@ -10,4 +10,5 @@ urlpatterns = [
     path('appointment/<uuid:pk>/edit/', views.update_appointment, name='update_appointment'),
     path('appointment/<uuid:pk>/cancel/', views.cancel_appointment, name='cancel_appointment'),
     path('api/available-times/', views.get_available_times, name='api_available_times'),
+    path('appointments/', views.appointments_dashboard, name='appointments'),
 ]
