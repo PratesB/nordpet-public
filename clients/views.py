@@ -326,3 +326,47 @@ def appointments_dashboard(request):
     }
 
     return render(request, 'clients/appointments.html', context)
+
+
+@login_required(login_url='users:login')
+def patients(request):
+    name = request.GET.get('name', '')
+    owner = request.GET.get('owner', '')
+    specie = request.GET.get('specie', '')
+
+    patients = Animal.objects.select_related('owner').all().order_by('-created_at')
+
+    if name:
+        patients = patients.filter(name__icontains=name)
+    if owner:
+        patients = patients.filter(owner__name__icontains=owner)
+    if specie:
+        patients = patients.filter(specie=specie)
+
+    patients_with_visits = []
+
+    for animal in patients:
+        last_visit = animal.appointments.filter(status='completed').order_by('-scheduled_at').first()
+        patients_with_visits.append({
+            'animal': animal,
+            'last_visit': last_visit
+        })
+    
+    context = {
+        'patients_with_visits': patients_with_visits,
+        'name': name,
+        'owner': owner,
+        'specie': specie,
+    }
+    return render(request, 'clients/patients.html', context)
+
+
+@login_required(login_url='users:login')
+def delete_patient(request, pk):
+    if request.method == 'POST':
+        animal = get_object_or_404(Animal, pk=pk)
+        animal.delete()
+        messages.success(request, 'Patient deleted successfully!')
+    else:
+        messages.error(request, 'Invalid request method.')
+    return redirect('clients:patients')

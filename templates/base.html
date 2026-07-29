@@ -41,7 +41,7 @@
                     </a>
                     <!-- Patients -->
                     <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'patients' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
-                       href="#">
+                       href="{% url 'clients:patients' %}">
                         <span class="material-symbols-outlined" data-icon="pets">pets</span>
                         Patients
                     </a>

@@ -11,4 +11,6 @@ urlpatterns = [
     path('appointment/<uuid:pk>/cancel/', views.cancel_appointment, name='cancel_appointment'),
     path('api/available-times/', views.get_available_times, name='api_available_times'),
     path('appointments/', views.appointments_dashboard, name='appointments'),
+    path('patients/', views.patients, name='patients'),
+    path('delete-patient/<int:pk>/', views.delete_patient, name='delete_patient'),
 ]
