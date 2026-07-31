@@ -95,7 +95,7 @@
                                     <span class="material-symbols-outlined text-[20px]" data-icon="description">description</span>
                                 </a>
                             {% endif %}
-                            <a href="#"
+                            <a href="{% url 'clients:update_patient' data.animal.id %}"
                                class="p-1.5 text-outline hover:text-primary hover:bg-surface-container-highest rounded-full transition-colors flex items-center justify-center"
                                title="Edit Patient">
                                 <span class="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>

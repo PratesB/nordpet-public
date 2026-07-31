@@ -362,6 +362,48 @@ def patients(request):
 
 
 @login_required(login_url='users:login')
+def update_patient(request, pk):
+    animal = get_object_or_404(Animal, pk=pk)
+    client = animal.owner
+    
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                client.name = request.POST.get('name', client.name)
+                client.email = request.POST.get('email', client.email)
+                client.phone = request.POST.get('phone', client.phone)
+                client.save()
+
+                animal.name = request.POST.get('animal_name', animal.name)
+                animal.specie = request.POST.get('specie', animal.specie)
+                animal.breed = request.POST.get('breed', animal.breed)
+                animal.gender = request.POST.get('gender', animal.gender)
+                
+                dob_str = request.POST.get('date_of_birth')
+                is_estimated = request.POST.get('estimate_date') == 'on'
+                photo = request.FILES.get('petPhoto')
+                
+                if dob_str:
+                    animal.date_of_birth = datetime.strptime(dob_str, '%Y-%m-%d').date()
+                animal.is_estimated_dob = is_estimated
+                if photo:
+                    animal.photo = photo
+                animal.save()
+            
+            messages.success(request, 'Patient updated successfully!')
+            return redirect('clients:patients')
+        except Exception as e:
+            messages.error(request, f'An error occurred: {str(e)}')
+            return redirect('clients:update_patient', pk=pk)
+
+    context = {
+        'animal': animal,
+        'client': client,
+    }
+    return render(request, 'clients/update_patient.html', context)
+
+
+@login_required(login_url='users:login')
 def delete_patient(request, pk):
     if request.method == 'POST':
         animal = get_object_or_404(Animal, pk=pk)
