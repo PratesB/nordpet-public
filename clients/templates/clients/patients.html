@@ -119,20 +119,20 @@
                                 <span class="material-symbols-outlined text-outline text-[18px]">person</span>
                                 <span class="font-semibold text-on-surface">Tutor:</span> {{ data.animal.owner.name }}
                             </div>
-                            <a href="#"
+                            <a href="{% url 'clients:add_pet' data.animal.owner.id %}"
                                class="flex items-center gap-0.5 px-2 py-0.5 bg-surface-container-highest text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container rounded-full transition-colors text-[11px] leading-tight font-medium border border-transparent hover:border-border-teal"
                                title="Add another patient for this tutor">
                                 <span class="material-symbols-outlined text-[12px]">add</span>
-                                <span>Add Patient</span>
+                                <span>Add Pet</span>
                             </a>
                         </div>
                         <div class="flex items-center gap-2 font-body-sm text-sm text-on-surface-variant">
                             <span class="material-symbols-outlined text-outline text-[18px]">phone</span>
-                            {{ data.animal.owner.phone }}
+                            <a href="https://wa.me/{{ data.animal.owner.phone|cut:' '|cut:'-'|cut:'('|cut:')'|cut:'+' }}" target="_blank" class="hover:underline hover:text-primary transition-colors">{{ data.animal.owner.phone }}</a>
                         </div>
                         <div class="flex items-center gap-2 font-body-sm text-sm text-on-surface-variant">
                             <span class="material-symbols-outlined text-outline text-[18px]">mail</span>
-                            {{ data.animal.owner.email }}
+                            <a href="mailto:{{ data.animal.owner.email }}" class="hover:underline hover:text-primary transition-colors">{{ data.animal.owner.email }}</a>
                         </div>
                     </div>
                     <div class="mt-4 pt-4 border-t border-border-teal flex justify-between items-center">

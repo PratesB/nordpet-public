@@ -412,3 +412,93 @@ def delete_patient(request, pk):
     else:
         messages.error(request, 'Invalid request method.')
     return redirect('clients:patients')
+
+
+@login_required(login_url='users:login')
+def add_pet(request, client_id):
+    client = get_object_or_404(Client, pk=client_id)
+    
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                new_pet = Animal.objects.create(
+                    owner=client,
+                    name=request.POST.get('animal_name'),
+                    specie=request.POST.get('specie'),
+                    breed=request.POST.get('breed'),
+                    gender=request.POST.get('gender'),
+                )
+                
+                dob_str = request.POST.get('date_of_birth')
+                is_estimated = request.POST.get('estimate_date') == 'on'
+                photo = request.FILES.get('petPhoto')
+                
+                if dob_str:
+                    new_pet.date_of_birth = datetime.strptime(dob_str, '%Y-%m-%d').date()
+                new_pet.is_estimated_dob = is_estimated
+                if photo:
+                    new_pet.photo = photo
+                new_pet.save()
+            
+            messages.success(request, f'Pet added successfully to {client.name}!')
+            return redirect('clients:patients')
+        except Exception as e:
+            messages.error(request, f'An error occurred: {str(e)}')
+            return redirect('clients:add_pet', client_id=client.id)
+
+    return render(request, 'clients/add_pet.html', {'client': client})
+
+
+@login_required(login_url='users:login')
+def client_list(request):
+    clients = Client.objects.prefetch_related('animal_set').all().order_by('-created_at')
+    
+    name = request.GET.get('name', '')
+    since_date = request.GET.get('since_date', '')
+    
+    if name:
+        clients = clients.filter(name__icontains=name)
+        
+    if since_date:
+        try:
+            target_date = datetime.strptime(since_date, '%Y-%m-%d').date()
+            clients = clients.filter(created_at__date=target_date)
+        except ValueError:
+            pass
+        
+    context = {
+        'clients': clients,
+        'name': name,
+        'since_date': since_date
+    }
+    return render(request, 'clients/client_list.html', context)
+
+
+@login_required(login_url='users:login')
+def update_client(request, pk):
+    client = get_object_or_404(Client, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            client.name = request.POST.get('name', client.name)
+            client.email = request.POST.get('email', client.email)
+            client.phone = request.POST.get('phone', client.phone)
+            client.save()
+            messages.success(request, f'Client {client.name} updated successfully!')
+            return redirect('clients:client_list')
+        except Exception as e:
+            messages.error(request, f'An error occurred: {str(e)}')
+            return redirect('clients:update_client', pk=pk)
+
+    return render(request, 'clients/update_client.html', {'client': client})
+
+
+@login_required(login_url='users:login')
+def delete_client(request, pk):
+    if request.method == 'POST':
+        client = get_object_or_404(Client, pk=pk)
+        client.delete()
+        messages.success(request, 'Client and their pets were deleted successfully!')
+    else:
+        messages.error(request, 'Invalid request method.')
+    return redirect('clients:client_list')

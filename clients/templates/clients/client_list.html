@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}NordPet - Clients{% endblock %}
+{% block content %}
+    <div class="max-w-7xl mx-auto w-full px-4 md:px-8 py-6 [&_.material-symbols-outlined]:[font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_24]">
+        <div class="flex justify-between items-end mb-6">
+            <div>
+                <h2 class="font-headline-lg text-3xl font-bold text-primary mb-2">Clients</h2>
+                <p class="font-body-sm text-base text-on-surface-variant">Manage and view all registered clients and their pets.</p>
+            </div>
+            <a href="{% url 'clients:new_client' %}" class="bg-primary text-on-primary text-sm font-semibold px-4 py-2 rounded-full hover:bg-surface-tint transition-colors flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[18px]">person_add</span>
+                New Client
+            </a>
+        </div>
+        <!-- Filters -->
+        <form method="GET"
+              action="{% url 'clients:client_list' %}"
+              class="bg-surface-container-lowest rounded-[1.5rem] shadow-md p-6 mb-8 flex flex-wrap gap-4 items-end">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block font-label-caps text-xs font-bold uppercase tracking-wider text-on-surface mb-2">Client Name</label>
+                <input name="name"
+                       value="{{ name }}"
+                       class="w-full rounded-full border border-border-teal px-4 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 font-body-sm text-sm outline-none transition-all"
+                       placeholder="e.g. John Doe"
+                       type="text" />
+            </div>
+            <div class="flex-1 min-w-[200px]">
+                <label class="block font-label-caps text-xs font-bold uppercase tracking-wider text-on-surface mb-2">Client Since</label>
+                <input name="since_date"
+                       value="{{ since_date }}"
+                       class="w-full rounded-full border border-border-teal px-4 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 font-body-sm text-sm outline-none transition-all"
+                       type="date" />
+            </div>
+            <div class="flex items-center gap-2">
+                {% if name or since_date %}
+                    <a href="{% url 'clients:client_list' %}"
+                       class="px-6 py-2 rounded-full font-button-text text-sm font-semibold text-error-red hover:bg-error-container transition-colors">
+                        Clear Filters
+                    </a>
+                {% endif %}
+                <button type="submit"
+                        class="bg-secondary-container text-on-secondary-container font-button-text text-sm font-semibold px-6 py-2 rounded-full hover:opacity-90 transition-opacity cursor-pointer">
+                    Search
+                </button>
+            </div>
+        </form>
+        <!-- Clients Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for client in clients %}
+                <div class="bg-surface-container-lowest rounded-[1.5rem] shadow-sm hover:shadow-md hover:-translate-y-1 p-6 border border-transparent hover:border-border-teal transition-all duration-200 flex flex-col relative overflow-hidden">
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <div class="flex items-center gap-4">
+                            <div>
+                                <a href="{% url 'clients:update_client' client.id %}" class="">
+                                    <h3 class="text-lg font-semibold text-primary leading-tight">{{ client.name }}</h3>
+                                </a>
+                                <p class="font-body-sm text-sm text-outline mt-1">Client since {{ client.created_at|date:"d/m/Y" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-3 pt-3 border-t border-border-teal mb-4">
+                        <div class="flex items-center gap-2 font-body-sm text-sm text-on-surface-variant">
+                            <span class="material-symbols-outlined text-outline text-[18px]">phone</span>
+                            <a href="https://wa.me/{{ client.phone|cut:' '|cut:'-'|cut:'('|cut:')'|cut:'+' }}" target="_blank" class="hover:underline hover:text-primary transition-colors">{{ client.phone }}</a>
+                        </div>
+                        <div class="flex items-center gap-2 font-body-sm text-sm text-on-surface-variant">
+                            <span class="material-symbols-outlined text-outline text-[18px]">mail</span>
+                            <a href="mailto:{{ client.email }}" class="hover:underline hover:text-primary transition-colors">{{ client.email }}</a>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-3 border-t border-border-teal">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-semibold text-sm text-on-surface">Pets</h4>
+                            <a href="{% url 'clients:add_pet' client.id %}" class="text-primary hover:bg-primary-container hover:text-on-primary-container px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 transition-colors">
+                                <span class="material-symbols-outlined text-[14px]">add</span> Add
+                            </a>
+                        </div>
+                        <div class="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                            {% for pet in client.animal_set.all %}
+                                <div class="flex items-center gap-3 bg-surface-container rounded-lg p-2">
+                                    <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-border-teal bg-surface flex items-center justify-center text-outline">
+                                        {% if pet.photo %}
+                                            <img src="{{ pet.photo.url }}" class="w-full h-full object-cover" alt="{{ pet.name }}">
+                                        {% else %}
+                                            <span class="material-symbols-outlined text-[16px]">pets</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-on-surface truncate">{{ pet.name }}</p>
+                                        <p class="text-[11px] text-on-surface-variant truncate">{{ pet.specie|title }} • {{ pet.breed }}</p>
+                                    </div>
+                                    <a href="{% url 'clients:update_patient' pet.id %}" class="text-outline hover:text-primary transition-colors p-1" title="Edit Pet">
+                                        <span class="material-symbols-outlined text-[16px]">edit</span>
+                                    </a>
+                                </div>
+                            {% empty %}
+                                <p class="text-xs text-on-surface-variant italic">No pets registered yet.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-10 text-on-surface-variant">
+                    No clients found matching your criteria.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #E0E0E0;
+            border-radius: 4px;
+        }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+            background: #BDBDBD;
+        }
+    </style>
+{% endblock %}
