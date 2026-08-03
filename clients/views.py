@@ -663,3 +663,88 @@ def end_consultation(request, appointment_id):
         messages.success(request, 'Consultation completed successfully.')
         
     return redirect('clients:medical_record', pet_id=appointment.animal.id)
+
+
+
+@login_required(login_url='users:login')
+def triage(request, pet_id):
+    pet = get_object_or_404(Animal, id=pet_id)
+
+    today = timezone.now().date()
+    
+    appointment_today = pet.appointments.filter(scheduled_at__date=today).exists()
+    
+    if not appointment_today:
+        messages.warning(request, 'This patient does not have an appointment today.')
+        return redirect('clients:patients')
+
+    triage = Triage.objects.filter(animal=pet, created_at__date=today).first()
+
+    if request.method == 'POST':
+        if triage:
+            messages.error(request, 'A triage has already been completed for this patient today.')
+            return redirect('clients:triage', pet_id=pet.id)
+        try:
+            heart_rate = int(request.POST.get('heart_rate'))
+            respiratory_rate = int(request.POST.get('respiratory_rate'))
+            temperature = float(request.POST.get('temperature'))
+            weight = float(request.POST.get('weight'))
+            complaint = request.POST.get('complaint', '').strip()
+            notes = request.POST.get('notes', '').strip()
+
+            if not complaint:
+                raise ValueError("Complaint cannot be empty")
+                
+        except (ValueError, TypeError):
+            messages.error(request, 'Please ensure all vital signs are valid numbers and the tutor complaint is filled out.')
+            return redirect('clients:triage', pet_id=pet.id)
+
+        # Triage Logic (simplified for now)
+        risk_level = 'green'
+        
+        complaint_lower = complaint.lower()
+        red_keywords = ['seizure', 'unconscious', 'bleeding', 'choking', 'poison', 'hit by car', 'fainting']
+        orange_keywords = ['vomit', 'diarrhea', 'pain', 'fracture']
+        yellow_keywords = ['lethargic', 'fever', 'itching', 'scratching']
+        
+        if any(word in complaint_lower for word in red_keywords):
+            risk_level = 'red'
+        elif any(word in complaint_lower for word in orange_keywords):
+            risk_level = 'orange'
+        elif any(word in complaint_lower for word in yellow_keywords):
+            risk_level = 'yellow'
+            
+        # Check vital signs extremes
+        if temperature > 40.0 or temperature < 36.0:
+            risk_level = 'red'
+        elif temperature > 39.5 or temperature < 37.0:
+            if risk_level in ['green', 'yellow']:
+                risk_level = 'orange'
+                
+        if heart_rate > 180 or heart_rate < 50:
+            if risk_level in ['green', 'yellow']:
+                risk_level = 'orange'
+        if heart_rate > 220 or heart_rate < 40:
+            risk_level = 'red'
+            
+        if respiratory_rate > 60 or respiratory_rate < 15:
+            if risk_level == 'green':
+                risk_level = 'yellow'
+        if respiratory_rate > 80 or respiratory_rate < 10:
+            risk_level = 'red'
+            
+        triage = Triage.objects.create(
+            animal=pet,
+            heart_rate=heart_rate,
+            respiratory_rate=respiratory_rate,
+            temperature=temperature,
+            weight=weight,
+            complaint=complaint,
+            notes=notes,
+            risk_level=risk_level
+        )
+        
+        messages.success(request, f'Triage completed successfully. Risk level assigned: {triage.get_risk_level_display()}')
+        return redirect('clients:triage', pet_id=pet.id)
+
+    return render(request, 'clients/triage.html', {'pet': pet, 'triage': triage})

@@ -226,7 +226,7 @@
                                                         <span>Triage completed</span>
                                                     </div>
                                                 {% else %}
-                                                    <a href="#"
+                                                    <a href="{% url 'clients:triage' appt.animal.id %}"
                                                        onclick="event.stopPropagation();"
                                                        class="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary-container/30 hover:bg-primary hover:text-white px-2 py-0.5 rounded-full border border-primary/20 transition-all z-20 shadow-sm hover:shadow"
                                                        title="Start Triage">
@@ -520,11 +520,11 @@
                                         </p>
                                         {% if appt.status != 'completed' and appt.status != 'in_progress' and not appt.has_triage_today %}
                                             <div class="mt-2">
-                                                <span class="inline-flex items-center gap-1 text-[10px] font-bold text-error-red bg-error-red/10 px-2 py-0.5 rounded-full border border-error-red/20"
-                                                      title="Awaiting Triage">
-                                                    <span class="material-symbols-outlined text-[12px]">pending_actions</span>
-                                                    AWAITING TRIAGE
-                                                </span>
+                                                <a href="{% url 'clients:triage' appt.animal.id %}" onclick="event.stopPropagation();" class="inline-flex items-center gap-1 text-[10px] font-bold text-error-red bg-error-red/10 hover:bg-error-red hover:text-white px-2 py-0.5 rounded-full border border-error-red/20 transition-all z-20 shadow-sm hover:shadow"
+                                                      title="Start Triage">
+                                                    <span class="material-symbols-outlined text-[12px]">stethoscope</span>
+                                                    TRIAGE
+                                                </a>
                                             </div>
                                         {% endif %}
                                     </div>
