@@ -89,9 +89,9 @@
                                 <span class="material-symbols-outlined text-[20px]" data-icon="stethoscope">stethoscope</span>
                             </a>
                             {% if request.user.role == 'ADM' or request.user.role == 'VET' %}
-                                <a class="p-1.5 text-info-blue hover:bg-info-blue/10 rounded-full transition-colors flex items-center justify-center"
-                                   title="Medical Record"
-                                   href="#">
+                                <a href="{% url 'clients:medical_record' data.animal.id %}"
+                                   class="p-1.5 text-info-blue hover:bg-info-blue/10 rounded-full transition-colors flex items-center justify-center"
+                                   title="Medical Record">
                                     <span class="material-symbols-outlined text-[20px]" data-icon="description">description</span>
                                 </a>
                             {% endif %}

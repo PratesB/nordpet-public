@@ -18,4 +18,6 @@ urlpatterns = [
     path('clients/', views.client_list, name='client_list'),
     path('update-client/<int:pk>/', views.update_client, name='update_client'),
     path('delete-client/<int:pk>/', views.delete_client, name='delete_client'),
+    path('medical-record/<int:pet_id>/', views.medical_record, name='medical_record'),
+    path('medical-record/upload/<int:pet_id>/', views.upload_medical_record, name='upload_medical_record'),
 ]

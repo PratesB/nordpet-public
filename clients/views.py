@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
-from .models import Client, Animal, Appointment
+from .models import Client, Animal, Appointment, Triage, MedicalRecord
 from datetime import datetime, timedelta
 from django.db import transaction
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+
 
 User = get_user_model()
 
@@ -502,3 +503,104 @@ def delete_client(request, pk):
     else:
         messages.error(request, 'Invalid request method.')
     return redirect('clients:client_list')
+
+
+
+@login_required(login_url='users:login')
+def upload_medical_record(request, pet_id):
+    if request.method == 'POST':
+        pet = get_object_or_404(Animal, id=pet_id)
+        consultation_media = request.FILES.get('consultation_media')
+        exam_pdf = request.FILES.get('exam_pdf')
+        clinical_note = request.POST.get('clinical_note')
+        appointment_id = request.POST.get('appointment_id')
+        
+        if consultation_media or exam_pdf or clinical_note:
+            try:
+                target_appointment = None
+                if appointment_id == 'standalone':
+                    target_appointment = None
+                elif appointment_id:
+                    target_appointment = Appointment.objects.filter(id=appointment_id, animal=pet).first()
+                else:
+                    today = timezone.now().date()
+                    target_appointment = Appointment.objects.filter(
+                        animal=pet,
+                        scheduled_at__date=today,
+                        status__in=['scheduled', 'in_progress']
+                    ).first()
+                
+                triage = Triage.objects.filter(animal=pet).order_by('-created_at').first()
+                
+                record = MedicalRecord(
+                    animal=pet,
+                    veterinarian=request.user if request.user.role == 'VET' else None,
+                    appointment=target_appointment,
+                    triage=triage,
+                )
+                
+                if consultation_media:
+                    record.consultation_media = consultation_media
+                if exam_pdf:
+                    record.exam_pdf = exam_pdf
+                if clinical_note:
+                    record.clinical_note = clinical_note
+                    
+                record.save()
+                    
+                messages.success(request, 'Record updated successfully.')
+            except Exception as e:
+                messages.error(request, f'An error occurred while saving the record: {str(e)}')
+        else:
+            messages.error(request, 'No file or text was provided.')
+            
+    return redirect('clients:medical_record', pet_id=pet_id)
+
+
+
+@login_required(login_url='users:login')
+def medical_record(request, pet_id):
+    if request.user.role not in ['ADM', 'VET']:
+        messages.error(request, 'You do not have permission to view medical records.')
+        return redirect('clients:patients')
+
+    pet = get_object_or_404(Animal, id=pet_id)
+    triage = Triage.objects.filter(animal=pet).order_by('-created_at').first()
+    medical_records = pet.medical_records.all().order_by('-created_at')
+    
+    # Find any active appointment for today
+    today = timezone.now().date()   
+    active_appointment = Appointment.objects.filter(
+        animal=pet,
+        scheduled_at__date=today,
+        status__in=['scheduled', 'in_progress']
+    ).first()
+    
+    appointments = list(pet.appointments.all().order_by('-scheduled_at'))
+    for appt in appointments:
+        appt.type = 'appointment'
+        # Find triage done on the same day as the appointment
+        appt.triage_obj = Triage.objects.filter(
+            animal=pet,
+            created_at__date=appt.scheduled_at.date()
+        ).first()
+
+    standalone_records = pet.medical_records.filter(appointment__isnull=True).order_by('-created_at')
+    standalone_events = list(standalone_records)
+    for rec in standalone_events:
+        rec.type = 'standalone_record'
+        rec.scheduled_at = rec.created_at 
+
+    timeline = appointments + standalone_events
+    timeline.sort(key=lambda x: x.scheduled_at, reverse=True)
+
+    context = {
+        'pet': pet,
+        'triage': triage,
+        'medical_records': medical_records,
+        'latest_record': medical_records.first(),
+        'active_appointment': active_appointment,
+        'appointments': appointments,
+        'timeline': timeline,
+    }
+    return render(request, 'clients/medical_record.html', context)

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Client, Animal, Appointment
+from .models import Client, Animal, Appointment, Triage, MedicalRecord
 
 
 @admin.register(Client)
@@ -24,3 +24,19 @@ class AppointmentAdmin(admin.ModelAdmin):
     list_filter = ('status', 'reason', 'scheduled_at')
     search_fields = ('animal__name', 'veterinarian__first_name', 'veterinarian__email', 'status', 'reason')
     ordering = ('-scheduled_at',)
+
+
+@admin.register(Triage)
+class TriageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'animal', 'risk_level', 'heart_rate', 'respiratory_rate', 'temperature', 'weight', 'created_at')
+    list_filter = ('risk_level', 'created_at')
+    search_fields = ('animal__name', 'complaint')
+    ordering = ('-created_at',)
+
+
+@admin.register(MedicalRecord)
+class MedicalRecordAdmin(admin.ModelAdmin):
+    list_display = ('id', 'animal', 'veterinarian', 'appointment', 'created_at')
+    list_filter = ('created_at', 'veterinarian')
+    search_fields = ('animal__name', 'veterinarian__first_name', 'veterinarian__email', 'clinical_note')
+    ordering = ('-created_at',)

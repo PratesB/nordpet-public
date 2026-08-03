@@ -143,3 +143,66 @@ class Appointment(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+
+
+
+
+class Triage(models.Model):
+
+    RISK_LEVEL_CHOICES = [
+        ('green', 'Green'),
+        ('yellow', 'Yellow'),
+        ('orange', 'Orange'),
+        ('red', 'Red'),
+    ]
+    
+    animal = models.ForeignKey(Animal, on_delete=models.CASCADE)
+    heart_rate = models.IntegerField()
+    respiratory_rate = models.IntegerField()
+    temperature = models.FloatField()
+    weight = models.FloatField()
+    complaint = models.TextField()
+    notes = models.TextField()
+    risk_level = models.CharField(max_length=10, choices=RISK_LEVEL_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.animal} - {self.risk_level}'
+
+
+
+
+class MedicalRecord(models.Model):
+    animal = models.ForeignKey(Animal, on_delete=models.CASCADE, related_name='medical_records')
+    
+    veterinarian = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='medical_records',
+        limit_choices_to={'role': 'VET'}
+    )
+    appointment = models.ForeignKey(Appointment, on_delete=models.SET_NULL, null=True, blank=True, related_name='medical_records')
+
+    triage = models.ForeignKey(Triage, on_delete=models.SET_NULL, null=True, blank=True, related_name='medical_records')
+    
+    consultation_media = models.FileField(upload_to='consultations/media/', null=True, blank=True)
+
+    ai_transcription_consultation = models.TextField(blank=True, null=True)
+
+    ai_summary_consultation = models.TextField(blank=True, null=True)
+    
+    exam_pdf = models.FileField(upload_to='consultations/exams/', null=True, blank=True)
+
+    ai_exam_ocr_text = models.TextField(blank=True, null=True)
+
+    ai_exam_interpretation = models.JSONField(blank=True, null=True)
+    
+    clinical_note = models.TextField(blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Medical Record - {self.animal.name} - {self.created_at.strftime("%Y-%m-%d %H:%M")}'
