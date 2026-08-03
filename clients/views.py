@@ -508,6 +508,10 @@ def delete_client(request, pk):
 
 @login_required(login_url='users:login')
 def upload_medical_record(request, pet_id):
+    if request.user.role not in ['ADM', 'VET']:
+        messages.error(request, 'You do not have permission to attach exams or notes.')
+        return redirect('clients:patients')
+
     if request.method == 'POST':
         pet = get_object_or_404(Animal, id=pet_id)
         consultation_media = request.FILES.get('consultation_media')
@@ -576,14 +580,20 @@ def medical_record(request, pet_id):
         status__in=['scheduled', 'in_progress']
     ).first()
     
+    triage_today = Triage.objects.filter(animal=pet, created_at__date=today).exists()
+    
     appointments = list(pet.appointments.all().order_by('-scheduled_at'))
+    completed_appointments = []
+    
     for appt in appointments:
-        appt.type = 'appointment'
-        # Find triage done on the same day as the appointment
-        appt.triage_obj = Triage.objects.filter(
-            animal=pet,
-            created_at__date=appt.scheduled_at.date()
-        ).first()
+        if appt.status == 'completed':
+            appt.type = 'appointment'
+            # Find triage done on the same day as the appointment
+            appt.triage_obj = Triage.objects.filter(
+                animal=pet,
+                created_at__date=appt.scheduled_at.date()
+            ).first()
+            completed_appointments.append(appt)
 
     standalone_records = pet.medical_records.filter(appointment__isnull=True).order_by('-created_at')
     standalone_events = list(standalone_records)
@@ -591,12 +601,13 @@ def medical_record(request, pet_id):
         rec.type = 'standalone_record'
         rec.scheduled_at = rec.created_at 
 
-    timeline = appointments + standalone_events
+    timeline = completed_appointments + standalone_events
     timeline.sort(key=lambda x: x.scheduled_at, reverse=True)
 
     context = {
         'pet': pet,
         'triage': triage,
+        'triage_today': triage_today,
         'medical_records': medical_records,
         'latest_record': medical_records.first(),
         'active_appointment': active_appointment,
@@ -604,3 +615,51 @@ def medical_record(request, pet_id):
         'timeline': timeline,
     }
     return render(request, 'clients/medical_record.html', context)
+
+
+
+@login_required(login_url='users:login')
+def start_consultation(request, pet_id):
+    if request.user.role != 'VET':
+        messages.error(request, 'Only veterinarians can start consultations.')
+        return redirect('clients:medical_record', pet_id=pet_id)
+
+    today = timezone.now().date()
+    appointment = Appointment.objects.filter(
+        animal_id=pet_id,
+        scheduled_at__date=today,
+        status='scheduled',
+        veterinarian=request.user
+    ).first()
+    
+    if appointment:
+        appointment.status = 'in_progress'
+        if not appointment.started_at:
+            appointment.started_at = timezone.now()
+        appointment.save()
+        messages.success(request, 'Consultation started successfully.')
+    else:
+        messages.error(request, 'No scheduled consultation found for you today for this pet.')
+        
+    return redirect('clients:medical_record', pet_id=pet_id)
+
+
+@login_required(login_url='users:login')
+def end_consultation(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id)
+    
+    if request.user.role != 'VET':
+        messages.error(request, 'Only veterinarians can end consultations.')
+        return redirect('clients:medical_record', pet_id=appointment.animal.id)
+
+    if appointment.veterinarian != request.user:
+        messages.error(request, 'You can only end your own consultations.')
+        return redirect('clients:medical_record', pet_id=appointment.animal.id)
+
+    if appointment.status == 'in_progress':
+        appointment.status = 'completed'
+        appointment.ended_at = timezone.now()
+        appointment.save()
+        messages.success(request, 'Consultation completed successfully.')
+        
+    return redirect('clients:medical_record', pet_id=appointment.animal.id)

@@ -20,4 +20,6 @@ urlpatterns = [
     path('delete-client/<int:pk>/', views.delete_client, name='delete_client'),
     path('medical-record/<int:pet_id>/', views.medical_record, name='medical_record'),
     path('medical-record/upload/<int:pet_id>/', views.upload_medical_record, name='upload_medical_record'),
+    path('appointment/<int:pet_id>/start/', views.start_consultation, name='start_consultation'),
+    path('appointment/<uuid:appointment_id>/end/', views.end_consultation, name='end_consultation'),
 ]

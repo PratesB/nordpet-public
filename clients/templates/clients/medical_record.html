@@ -37,11 +37,36 @@
                             <span class="material-symbols-outlined text-[18px]">arrow_back</span>
                             Back to Patients
                         </a>
-                        {% if active_appointment %}
-                            <div class="bg-primary-container text-on-primary-container px-4 py-2 rounded-xl flex items-center gap-2 font-medium">
-                                <span class="material-symbols-outlined text-[18px]">event_available</span>
-                                Active Appointment Today
-                            </div>
+                        {% if user.role == 'VET' %}
+                            {% if active_appointment and active_appointment.veterinarian == user %}
+                                {% if active_appointment.status == 'scheduled' %}
+                                    {% if triage_today %}
+                                        <a href="{% url 'clients:start_consultation' pet.id %}" class="bg-primary text-white px-5 py-2.5 rounded-full flex items-center gap-2 font-bold hover:shadow-lg hover:bg-primary/90 transition-all transform hover:-translate-y-0.5">
+                                            <span class="material-symbols-outlined text-[20px]">play_circle</span>
+                                            Start Consultation
+                                        </a>
+                                    {% else %}
+                                        <div class="bg-surface-container-highest text-on-surface-variant px-5 py-2.5 rounded-full flex items-center gap-2 font-bold opacity-70 cursor-not-allowed" title="Triage is required before starting the consultation">
+                                            <span class="material-symbols-outlined text-[20px]">info</span>
+                                            Waiting for Triage
+                                        </div>
+                                    {% endif %}
+                                {% elif active_appointment.status == 'in_progress' %}
+                                    <div class="flex items-center bg-red-50 text-red-700 rounded-full overflow-hidden shadow-sm border border-red-200 ml-2">
+                                        <div class="px-4 py-2.5 flex items-center gap-2 font-mono font-bold text-base bg-red-100/50 border-r border-red-200">
+                                            <span class="relative flex h-3 w-3">
+                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
+                                            </span>
+                                            <span id="consultation-timer" data-start="{{ active_appointment.started_at|date:'c' }}">00:00:00</span>
+                                        </div>
+                                        <a href="{% url 'clients:end_consultation' active_appointment.id %}" class="px-5 py-2.5 flex items-center gap-2 font-bold hover:bg-red-200 transition-colors group">
+                                            <span class="material-symbols-outlined text-[20px] group-hover:animate-pulse">stop_circle</span>
+                                            End Consultation
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>
@@ -138,11 +163,11 @@
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: Medical History Timeline -->
+        <!-- RIGHT COLUMN: Medical History -->
         <div class="lg:col-span-2">
             <h3 class="text-xl font-bold text-primary mb-6 flex items-center gap-2">
                 <span class="material-symbols-outlined">history</span>
-                Medical History Timeline
+                Medical History
             </h3>
 
             {% if not timeline %}
@@ -151,10 +176,10 @@
                     <p>No medical history found for this patient yet.</p>
                 </div>
             {% else %}
-                <div class="relative border-l-2 border-primary-container ml-4 md:ml-6 pb-8">
+                <div class="relative pb-8">
                     
                     {% for item in timeline %}
-                        <div class="relative pl-8 md:pl-10 mb-12">
+                        <div class="relative mb-12">
                             
                             <!-- Content Card -->
                             <div class="bg-surface-container-lowest rounded-[1.5rem] shadow-sm p-5 md:p-6 border border-transparent hover:border-border-teal transition-all">
@@ -294,4 +319,6 @@
         </div>
     </div>
 </div>
+
+<script src="{% static 'js/clients/medical_record.js' %}"></script>
 {% endblock %}
