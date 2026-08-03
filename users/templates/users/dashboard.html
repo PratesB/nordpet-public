@@ -186,7 +186,7 @@
                                             <div class="w-[2px] h-full bg-border-teal absolute top-4 left-[4px] -z-0"></div>
                                         {% endif %}
                                     </div>
-                                    <div class="bg-gray-100-{% if appt.status == 'completed' %}low{% else %}lowest{% endif %} rounded-lg py-2 px-4 flex-1 border border-{% if appt.status == 'completed' %}transparent{% else %}border-teal{% endif %} hover:border-primary-container transition-colors cursor-pointer"
+                                    <div class="bg-white rounded-lg py-2 px-4 flex-1 border border-{% if appt.status == 'completed' %}transparent{% else %}border-teal{% endif %} hover:border-primary-container transition-colors cursor-pointer"
                                          onclick="">
                                         <div class="flex justify-between items-center mb-0.5">
                                             <span class="font-bold text-[12px] {% if appt.status == 'completed' %}text-primary{% else %}text-gray-500{% endif %} tracking-wide">{{ appt.scheduled_at|date:"h:i A" }}</span>
@@ -205,32 +205,32 @@
                                                     <span class="material-symbols-outlined text-[14px]">person</span> Owner: {{ appt.animal.owner.name }}
                                                 </p>
                                                 <p class="text-[12px] text-gray-500 flex items-center gap-1 mt-0.5">
-                                                    <span class="material-symbols-outlined text-[14px]">stethoscope</span> Dr. {{ appt.veterinarian.first_name }} {{ appt.veterinarian.last_name }}
+                                                    <span class="material-symbols-outlined text-[14px]">medical_services</span> Dr. {{ appt.veterinarian.first_name }} {{ appt.veterinarian.last_name }}
                                                 </p>
                                             </div>
                                             {% if appt.status == 'completed' or appt.status == 'in_progress' %}
                                                 <!-- Hide triage info for completed or in-progress appointments -->
                                             {% else %}
-                                                {% if appt.has_triage_today and appt.triage_risk_level %}
-                                                    <div class="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border {% if appt.triage_risk_level == 'red' %}text-error-red bg-error-red/10 border-error-red/20 {% elif appt.triage_risk_level == 'orange' %}text-orange-600 bg-orange-600/10 border-orange-600/20 {% elif appt.triage_risk_level == 'yellow' %}text-warning-amber bg-warning-amber/10 border-warning-amber/20 {% else %}text-success-green bg-success-green/10 border-success-green/20{% endif %}"
+                                                {% if appt.triage_today and appt.triage_risk_level %}
+                                                    <div class="flex items-center gap-1 text-[9px] font-bold px-2.5 py-1 rounded-full border {% if appt.triage_risk_level == 'red' %}text-error-red bg-error-red/10 border-error-red/20 {% elif appt.triage_risk_level == 'orange' %}text-orange-600 bg-orange-600/10 border-orange-600/20 {% elif appt.triage_risk_level == 'yellow' %}text-warning-amber bg-warning-amber/10 border-warning-amber/20 {% else %}text-success-green bg-success-green/10 border-success-green/20{% endif %} tracking-wide"
                                                          title="Risk Level: {{ appt.triage_risk_level|title }}">
-                                                        <span class="material-symbols-outlined text-[12px]">
+                                                        <span class="material-symbols-outlined" style="font-size: 12px;">
                                                             {% if appt.triage_risk_level == 'red' or appt.triage_risk_level == 'orange' %}warning{% else %}check_circle{% endif %}
                                                         </span>
                                                         <span>Risk: {{ appt.triage_risk_level|title }}</span>
                                                     </div>
-                                                {% elif appt.has_triage_today %}
-                                                    <div class="flex items-center gap-1 text-[10px] font-bold text-success-green bg-success-green/10 px-2 py-0.5 rounded-full border border-success-green/20"
+                                                {% elif appt.triage_today %}
+                                                    <div class="flex items-center gap-1 text-[9px] font-bold text-success-green bg-success-green/10 px-2.5 py-1 rounded-full border border-success-green/20 tracking-wide"
                                                          title="Triage Completed">
-                                                        <span class="material-symbols-outlined text-[12px]">check_circle</span>
+                                                        <span class="material-symbols-outlined" style="font-size: 12px;">check_circle</span>
                                                         <span>Triage completed</span>
                                                     </div>
                                                 {% else %}
                                                     <a href="{% url 'clients:triage' appt.animal.id %}"
                                                        onclick="event.stopPropagation();"
-                                                       class="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary-container/30 hover:bg-primary hover:text-white px-2 py-0.5 rounded-full border border-primary/20 transition-all z-20 shadow-sm hover:shadow"
+                                                       class="flex items-center gap-1.5 text-[10px] font-bold text-primary bg-primary-container/20 hover:bg-primary hover:text-white px-3 py-1 rounded-full border border-primary/20 transition-all z-20 shadow-sm hover:shadow tracking-wide"
                                                        title="Start Triage">
-                                                        <span class="material-symbols-outlined text-[12px]">stethoscope</span>
+                                                        <span class="material-symbols-outlined" style="font-size: 13px;">stethoscope</span>
                                                         <span>TRIAGE</span>
                                                     </a>
                                                 {% endif %}
@@ -245,7 +245,7 @@
                                 </div>
                             {% endfor %}
                         </div>
-                        <a href="#"
+                        <a href="{% url 'clients:appointments' %}"
                            class="block text-center w-full mt-4 py-2 text-primary font-semibold text-sm hover:bg-gray-50 rounded-full transition-colors cursor-pointer">
                             View Full Calendar
                         </a>

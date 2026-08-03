@@ -4,7 +4,9 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.utils import timezone
 from .models import User
+from clients.models import Appointment
 
 
 
@@ -31,7 +33,19 @@ def login(request):
 
 @login_required(login_url='users:login')
 def dashboard(request):
-    return render(request, 'users/dashboard.html')
+    today = timezone.now().date()
+    appointments = Appointment.objects.filter(scheduled_at__date=today).order_by('scheduled_at')
+    
+    for appt in appointments:
+        triage = appt.animal.triage_set.filter(created_at__date=today).first()
+        if triage:
+            appt.triage_today = True
+            appt.triage_risk_level = triage.risk_level
+        else:
+            appt.triage_today = False
+            appt.triage_risk_level = None
+            
+    return render(request, 'users/dashboard.html', {'today_appointments': appointments})
 
 
 
