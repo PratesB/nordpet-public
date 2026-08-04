@@ -28,7 +28,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users',
-    'clients'
+    'clients',
+    'ai',
 ]
 
 MIDDLEWARE = [
@@ -129,3 +130,7 @@ MESSAGE_TAGS = {
     messages.WARNING: 'bg-warning-amber text-white',
     messages.ERROR: 'bg-error-red text-white',
 }
+
+
+# OPEN AI
+OPENAI_API_KEY = config('OPENAI_API_KEY')
