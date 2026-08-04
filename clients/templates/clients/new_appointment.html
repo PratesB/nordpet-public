@@ -42,7 +42,7 @@
                                                 data-name="{{ animal.name }}"
                                                 data-specie="{{ animal.get_specie_display }}"
                                                 data-owner="{{ animal.owner.name }}"
-                                                {% if appointment and appointment.animal.id == animal.id %}selected{% endif %}>{{ animal.name }}</option>
+                                                {% if appointment and appointment.animal.id == animal.id %}selected{% elif preselected_animal_id and preselected_animal_id == animal.id|stringformat:"s" %}selected{% endif %}>{{ animal.name }}</option>
                                     {% endfor %}
                                 </select>
                                 <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">expand_more</span>

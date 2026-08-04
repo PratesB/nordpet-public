@@ -100,6 +100,7 @@ def new_appointment(request):
         'durations': Appointment.DURATION_CHOICES,
         'reasons': Appointment.REASON_CHOICES,
         'time_slots': time_slots,
+        'preselected_animal_id': request.GET.get('animal_id'),
     }
     return render(request, 'clients/new_appointment.html', context)
 
