@@ -744,7 +744,7 @@ def triage(request, pet_id):
             risk_level=risk_level
         )
         
-        messages.success(request, f'Triage completed successfully. Risk level assigned: {triage.get_risk_level_display()}')
+
         return redirect('clients:triage', pet_id=pet.id)
 
     return render(request, 'clients/triage.html', {'pet': pet, 'triage': triage})

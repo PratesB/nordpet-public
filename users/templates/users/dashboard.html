@@ -128,20 +128,39 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <form method="POST" action="{% url 'clients:cancel_appointment' appt.id %}" class="m-0">
-                                            {% csrf_token %}
-                                            <button type="submit"
-                                                    onclick="return confirm('Are you sure you want to cancel this emergency appointment?');"
-                                                    class="bg-gray-100 hover:bg-error-red hover:text-white text-error-red rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-sm"
-                                                    title="Cancel Appointment">
-                                                <span class="material-symbols-outlined text-[20px]">close</span>
-                                            </button>
-                                        </form>
-                                        <a href="{% url 'clients:update_appointment' appt.id %}"
-                                           class="bg-gray-100 hover:bg-primary hover:text-white text-primary rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-sm"
-                                           title="Edit Appointment">
-                                            <span class="material-symbols-outlined text-[18px]">edit</span>
-                                        </a>
+                                        {% if appt.status == 'completed' %}
+                                            <span class="bg-gray-100 text-success-green text-[10px] uppercase tracking-wide font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-[12px]">check_circle</span> Completed
+                                            </span>
+                                        {% elif appt.status == 'in_progress' %}
+                                            <span class="bg-warning-amber/20 text-warning-amber text-[10px] uppercase tracking-wide font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-[12px]">sync</span> In Progress
+                                            </span>
+                                        {% elif appt.status == 'canceled' %}
+                                            <span class="bg-gray-100 text-gray-500 text-[10px] uppercase tracking-wide font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-[12px]">cancel</span> Canceled
+                                            </span>
+                                        {% else %}
+                                            <span class="bg-primary/10 text-primary text-[10px] uppercase tracking-wide font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-[12px]">pending_actions</span> Waiting
+                                            </span>
+                                        {% endif %}
+                                        {% if appt.status == 'scheduled' %}
+                                            <form method="POST" action="{% url 'clients:cancel_appointment' appt.id %}" class="m-0">
+                                                {% csrf_token %}
+                                                <button type="submit"
+                                                        onclick="return confirm('Are you sure you want to cancel this emergency appointment?');"
+                                                        class="bg-gray-100 hover:bg-error-red hover:text-white text-error-red rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-sm"
+                                                        title="Cancel Appointment">
+                                                    <span class="material-symbols-outlined text-[20px]">close</span>
+                                                </button>
+                                            </form>
+                                            <a href="{% url 'clients:update_appointment' appt.id %}"
+                                               class="bg-gray-100 hover:bg-primary hover:text-white text-primary rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-sm"
+                                               title="Edit Appointment">
+                                                <span class="material-symbols-outlined text-[18px]">edit</span>
+                                            </a>
+                                        {% endif %}
                                         {% if request.user.role == 'ADM' %}
                                             <a href="{% url 'clients:medical_record' appt.animal.id %}"
                                                class="bg-gray-200 hover:bg-error-red hover:text-white text-error-red rounded-full px-6 py-2 font-semibold text-sm transition-colors text-center">
@@ -164,7 +183,7 @@
                     <!-- Personal Agenda Card -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
                         <div class="flex flex-col gap-3 mb-4">
-                            <h3 class="font-bold text-xl text-gray-900">Today's Appointments</h3>
+                            <h3 class="font-bold text-xl text-gray-900">Upcoming Appointments</h3>
                             <div class="flex gap-2">
                                 <button onclick="filterAppointments('all')" id="btn-filter-all" data-state="active" class="cursor-pointer px-3 py-1 text-[11px] font-bold rounded-full transition-colors data-[state=active]:bg-primary data-[state=active]:text-white data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:bg-gray-200">All</button>
                                 <button onclick="filterAppointments('triaged')" id="btn-filter-triaged" data-state="inactive" class="cursor-pointer px-3 py-1 text-[11px] font-bold rounded-full transition-colors data-[state=active]:bg-primary data-[state=active]:text-white data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-600 data-[state=inactive]:hover:bg-gray-200">Triaged</button>
@@ -297,15 +316,29 @@
                                                     <p class="text-sm text-error-red flex items-center gap-1 font-bold">
                                                         <span class="material-symbols-outlined text-[14px]">schedule</span> Emergency Appointment at {{ appt.scheduled_at|date:"H:i" }}
                                                     </p>
+
                                                 </div>
                                             </div>
                                         </div>
-                                        {% if appt.status == 'completed' %}
-                                            <span class="bg-gray-200 text-success-green text-xs uppercase tracking-wide font-bold px-4 py-2 rounded-full flex items-center gap-1 self-center">
-                                                <span class="material-symbols-outlined text-[18px]">task_alt</span> Completed
-                                            </span>
-                                        {% else %}
-                                            <div class="flex items-center gap-2">
+                                        <div class="flex items-center gap-2">
+                                            {% if appt.status == 'completed' %}
+                                                <span class="bg-gray-100 text-success-green text-[10px] uppercase tracking-wide font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[12px]">check_circle</span> Completed
+                                                </span>
+                                            {% elif appt.status == 'in_progress' %}
+                                                <span class="bg-warning-amber/20 text-warning-amber text-[10px] uppercase tracking-wide font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[12px]">sync</span> In Progress
+                                                </span>
+                                            {% elif appt.status == 'canceled' %}
+                                                <span class="bg-gray-100 text-gray-500 text-[10px] uppercase tracking-wide font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[12px]">cancel</span> Canceled
+                                                </span>
+                                            {% else %}
+                                                <span class="bg-primary/10 text-primary text-[10px] uppercase tracking-wide font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[12px]">pending_actions</span> Waiting
+                                                </span>
+                                            {% endif %}
+                                            {% if appt.status == 'scheduled' %}
                                                 <form method="POST" action="{% url 'clients:cancel_appointment' appt.id %}" class="m-0">
                                                     {% csrf_token %}
                                                     <button type="submit"
@@ -320,6 +353,7 @@
                                                    title="Edit Appointment">
                                                     <span class="material-symbols-outlined text-[18px]">edit</span>
                                                 </a>
+                                            {% endif %}
                                                 {% if request.user.role == 'ADM' or request.user.role == 'VET' %}
                                                     {% if appt.status == 'in_progress' %}
                                                         <a href="{% url 'clients:medical_record' appt.animal.id %}"
@@ -327,14 +361,20 @@
                                                             <span class="material-symbols-outlined text-[18px]">sync</span> In progress...
                                                         </a>
                                                     {% else %}
-                                                        <a href="{% url 'clients:medical_record' appt.animal.id %}"
-                                                           class="bg-gray-200 hover:bg-error-red hover:text-white text-error-red rounded-full px-6 py-2 font-semibold text-sm transition-colors text-center">
-                                                            Open Patient
-                                                        </a>
+                                                        {% if request.user.role == 'VET' %}
+                                                            <a href="{% url 'clients:start_consultation' appt.animal.id %}"
+                                                               class="bg-gray-200 hover:bg-error-red hover:text-white text-error-red rounded-full px-6 py-2 font-semibold text-sm transition-colors text-center">
+                                                                Start Consultation
+                                                            </a>
+                                                        {% else %}
+                                                            <a href="{% url 'clients:medical_record' appt.animal.id %}"
+                                                               class="bg-gray-200 hover:bg-error-red hover:text-white text-error-red rounded-full px-6 py-2 font-semibold text-sm transition-colors text-center">
+                                                                Open Patient
+                                                            </a>
+                                                        {% endif %}
                                                     {% endif %}
                                                 {% endif %}
-                                            </div>
-                                        {% endif %}
+                                        </div>
                                     </div>
                                 {% endfor %}
                             </div>

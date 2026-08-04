@@ -40,7 +40,7 @@
                         {% if user.role == 'VET' %}
                             {% if active_appointment and active_appointment.veterinarian == user %}
                                 {% if active_appointment.status == 'scheduled' %}
-                                    {% if triage_today %}
+                                    {% if triage_today or active_appointment.reason == 'emergency' %}
                                         <a href="{% url 'clients:start_consultation' pet.id %}" class="bg-primary text-white px-5 py-2.5 rounded-full flex items-center gap-2 font-bold hover:shadow-lg hover:bg-primary/90 transition-all transform hover:-translate-y-0.5">
                                             <span class="material-symbols-outlined text-[20px]">play_circle</span>
                                             Start Consultation

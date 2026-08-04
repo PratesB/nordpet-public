@@ -58,7 +58,7 @@ def dashboard(request):
             appt.triage_today = True
             appt.triage_risk_level = triage.risk_level
             
-            if request.user.role == 'VET' and appt.veterinarian == request.user:
+            if request.user.role == 'VET' and appt.veterinarian == request.user and appt.status not in ['completed', 'canceled']:
                 triage.appt_status = appt.status
                 urgent_triages.append(triage)
                 
@@ -77,13 +77,15 @@ def dashboard(request):
                 awaiting_triage += 1
             
         if appt.reason == 'emergency':
-            emergency_appointments.append(appt)
+            if appt.status not in ['completed', 'canceled']:
+                emergency_appointments.append(appt)
         else:
-            if request.user.role == 'VET':
-                if appt.veterinarian == request.user and appt.status not in ['completed', 'canceled']:
+            if appt.status not in ['completed', 'canceled']:
+                if request.user.role == 'VET':
+                    if appt.veterinarian == request.user and not triage:
+                        today_appointments.append(appt)
+                else:
                     today_appointments.append(appt)
-            else:
-                today_appointments.append(appt)
             
     completed_appts = all_appointments.filter(status='completed').count()
     canceled_appts = all_appointments.filter(status='canceled').count()
