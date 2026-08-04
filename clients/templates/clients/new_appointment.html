@@ -39,7 +39,10 @@
                                             {% if not appointment or not appointment.animal %}selected{% endif %}>Select a pet...</option>
                                     {% for animal in animals %}
                                         <option value="{{ animal.id }}"
-                                                {% if appointment and appointment.animal.id == animal.id %}selected{% endif %}>{{ animal.name }} ({{ animal.owner.name }})</option>
+                                                data-name="{{ animal.name }}"
+                                                data-specie="{{ animal.get_specie_display }}"
+                                                data-owner="{{ animal.owner.name }}"
+                                                {% if appointment and appointment.animal.id == animal.id %}selected{% endif %}>{{ animal.name }}</option>
                                     {% endfor %}
                                 </select>
                                 <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">expand_more</span>
@@ -59,7 +62,9 @@
                                             {% if not appointment or not appointment.veterinarian %}selected{% endif %}>Select veterinarian...</option>
                                     {% for vet in veterinarians %}
                                         <option value="{{ vet.id }}"
-                                                {% if appointment and appointment.veterinarian.id == vet.id %}selected{% endif %}>{{ vet.get_full_name|default:vet.email }}</option>
+                                                data-name="{{ vet.first_name }} {{ vet.last_name }}"
+                                                data-role="Veterinarian"
+                                                {% if appointment and appointment.veterinarian.id == vet.id %}selected{% endif %}>{{ vet.first_name }} {{ vet.last_name }}</option>
                                     {% endfor %}
                                 </select>
                                 <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">expand_more</span>
@@ -72,7 +77,7 @@
                                 <!-- Date -->
                                 <div class="flex-1 relative">
                                     <input type="date"
-                                           class="w-full rounded-full border-2 border-border-teal bg-surface px-4 py-2.5 focus:border-primary focus:ring-0 focus:outline-none transition-colors font-body-md text-body-md"
+                                           class="w-full rounded-full border-2 border-border-teal bg-surface px-4 py-2.5 focus:border-primary focus:ring-0 focus:outline-none transition-colors font-body-md text-body-md read-only:bg-surface-variant read-only:opacity-70 read-only:cursor-not-allowed read-only:pointer-events-none"
                                            id="appointment_date"
                                            name="appointment_date"
                                            required
@@ -80,7 +85,7 @@
                                 </div>
                                 <!-- Time -->
                                 <div class="flex-1 relative">
-                                    <select class="w-full rounded-full border-2 border-border-teal bg-surface px-4 py-2.5 focus:border-primary focus:ring-0 focus:outline-none transition-colors font-body-md text-body-md appearance-none focus:ring-2 focus:ring-primary/20 cursor-pointer pr-10"
+                                    <select class="w-full rounded-full border-2 border-border-teal bg-surface px-4 py-2.5 focus:border-primary focus:ring-0 focus:outline-none transition-colors font-body-md text-body-md appearance-none focus:ring-2 focus:ring-primary/20 cursor-pointer pr-10 disabled:bg-surface-variant disabled:opacity-70 disabled:cursor-not-allowed disabled:pointer-events-none"
                                             id="appointment_time"
                                             name="appointment_time"
                                             required>
@@ -94,7 +99,7 @@
                                 </div>
                                 <!-- Duration -->
                                 <div class="flex-1 relative">
-                                    <select class="w-full rounded-full border-2 border-border-teal bg-surface px-4 py-2.5 focus:border-primary focus:ring-0 focus:outline-none transition-colors font-body-md text-body-md appearance-none focus:ring-2 focus:ring-primary/20 cursor-pointer pr-10"
+                                    <select class="w-full rounded-full border-2 border-border-teal bg-surface px-4 py-2.5 focus:border-primary focus:ring-0 focus:outline-none transition-colors font-body-md text-body-md appearance-none focus:ring-2 focus:ring-primary/20 cursor-pointer pr-10 disabled:bg-surface-variant disabled:opacity-70 disabled:cursor-not-allowed disabled:pointer-events-none"
                                             id="duration"
                                             name="duration"
                                             required>
@@ -178,5 +183,35 @@
                 {% csrf_token %}
             </form>
         {% endif %}
+        
+        <!-- Dropdown Templates -->
+        <template id="searchable-dropdown-template">
+            <div class="relative w-full mt-1">
+                <input type="text" autocomplete="off" class="w-full rounded-full border-2 border-border-teal bg-surface px-4 py-2 focus:border-primary focus:ring-0 focus:outline-none transition-colors font-body-md text-body-md pr-10 relative z-10">
+                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500 z-20">search</span>
+                <ul class="absolute z-[100] w-full mt-2 max-h-60 overflow-auto bg-surface border-2 border-border-teal rounded-[16px] shadow-2xl hidden py-1"></ul>
+            </div>
+        </template>
+        
+        <template id="dropdown-item-template">
+            <li class="px-4 py-3 cursor-pointer transition-colors border-b border-surface-variant last:border-0 flex items-center gap-3 dropdown-item
+                       bg-surface hover:bg-primary-container hover:text-on-primary-container
+                       data-[selected=true]:bg-primary data-[selected=true]:text-white data-[selected=true]:hover:bg-primary data-[selected=true]:hover:text-white">
+                <div class="dropdown-icon-container w-10 h-10 rounded-full flex items-center justify-center shrink-0
+                            data-[type=animal]:bg-primary-container data-[type=animal]:text-primary
+                            data-[type=vet]:bg-secondary-container data-[type=vet]:text-secondary">
+                    <span class="dropdown-icon material-symbols-outlined text-[20px]"></span>
+                </div>
+                <div class="dropdown-text-container flex flex-col data-[has-details=false]:flex-row">
+                    <span class="dropdown-name font-bold text-sm text-on-surface data-[selected=true]:text-white"></span>
+                    <span class="dropdown-details text-xs text-on-surface-variant data-[selected=true]:text-white data-[selected=true]:opacity-90"></span>
+                </div>
+            </li>
+        </template>
+        
+        <template id="dropdown-empty-template">
+            <li class="px-4 py-2 text-on-surface-variant text-sm font-body-md italic bg-surface"></li>
+        </template>
+
         <script src="{% static 'js/clients/new_appointment.js' %}"></script>
 {% endblock %}
