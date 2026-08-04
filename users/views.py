@@ -39,6 +39,7 @@ def dashboard(request):
     
     today_appointments = []
     emergency_appointments = []
+    urgent_triages = []
     
     red_count = 0
     orange_count = 0
@@ -57,6 +58,10 @@ def dashboard(request):
             appt.triage_today = True
             appt.triage_risk_level = triage.risk_level
             
+            if request.user.role == 'VET' and appt.veterinarian == request.user:
+                triage.appt_status = appt.status
+                urgent_triages.append(triage)
+                
             if triage.risk_level == 'red':
                 red_count += 1
             elif triage.risk_level == 'orange':
@@ -75,7 +80,7 @@ def dashboard(request):
             emergency_appointments.append(appt)
         else:
             if request.user.role == 'VET':
-                if appt.veterinarian == request.user:
+                if appt.veterinarian == request.user and appt.status not in ['completed', 'canceled']:
                     today_appointments.append(appt)
             else:
                 today_appointments.append(appt)
@@ -97,6 +102,7 @@ def dashboard(request):
     return render(request, 'users/dashboard.html', {
         'today_appointments': today_appointments,
         'emergency_appointments': emergency_appointments,
+        'urgent_triages': urgent_triages,
         'completed_appts': completed_appts,
         'canceled_appts': canceled_appts,
         'total_emergencies': total_emergencies,
