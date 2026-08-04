@@ -4,7 +4,10 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.utils import timezone
+from datetime import timedelta
 from .models import User
+from clients.models import Appointment
 
 
 
@@ -31,7 +34,87 @@ def login(request):
 
 @login_required(login_url='users:login')
 def dashboard(request):
-    return render(request, 'users/dashboard.html')
+    today = timezone.now().date()
+    all_appointments = Appointment.objects.filter(scheduled_at__date=today).order_by('scheduled_at')
+    
+    today_appointments = []
+    emergency_appointments = []
+    urgent_triages = []
+    
+    red_count = 0
+    orange_count = 0
+    yellow_count = 0
+    green_count = 0
+    awaiting_triage = 0
+    
+    for appt in all_appointments:
+        if appt.scheduled_at:
+            appt.end_time = appt.scheduled_at + timedelta(minutes=appt.duration)
+        else:
+            appt.end_time = None
+            
+        triage = appt.animal.triage_set.filter(created_at__date=today).first()
+        if triage:
+            appt.triage_today = True
+            appt.triage_risk_level = triage.risk_level
+            
+            if request.user.role == 'VET' and appt.veterinarian == request.user and appt.status not in ['completed', 'canceled']:
+                triage.appt_status = appt.status
+                urgent_triages.append(triage)
+                
+            if triage.risk_level == 'red':
+                red_count += 1
+            elif triage.risk_level == 'orange':
+                orange_count += 1
+            elif triage.risk_level == 'yellow':
+                yellow_count += 1
+            elif triage.risk_level == 'green':
+                green_count += 1
+        else:
+            appt.triage_today = False
+            appt.triage_risk_level = None
+            if appt.status not in ['completed', 'canceled']:
+                awaiting_triage += 1
+            
+        if appt.reason == 'emergency':
+            if appt.status not in ['completed', 'canceled']:
+                emergency_appointments.append(appt)
+        else:
+            if appt.status not in ['completed', 'canceled']:
+                if request.user.role == 'VET':
+                    if appt.veterinarian == request.user and not triage:
+                        today_appointments.append(appt)
+                else:
+                    today_appointments.append(appt)
+            
+    completed_appts = all_appointments.filter(status='completed').count()
+    canceled_appts = all_appointments.filter(status='canceled').count()
+    total_emergencies = all_appointments.filter(reason='emergency').count()
+    scheduled_appts = all_appointments.filter(status='scheduled').count()
+
+    total_triages = red_count + orange_count + yellow_count + green_count
+    if total_triages > 0:
+        red_pct = int((red_count / total_triages) * 100)
+        orange_pct = int((orange_count / total_triages) * 100)
+        yellow_pct = int((yellow_count / total_triages) * 100)
+        green_pct = int((green_count / total_triages) * 100)
+    else:
+        red_pct = orange_pct = yellow_pct = green_pct = 0
+
+    return render(request, 'users/dashboard.html', {
+        'today_appointments': today_appointments,
+        'emergency_appointments': emergency_appointments,
+        'urgent_triages': urgent_triages,
+        'completed_appts': completed_appts,
+        'canceled_appts': canceled_appts,
+        'total_emergencies': total_emergencies,
+        'scheduled_appts': scheduled_appts,
+        'awaiting_triage': awaiting_triage,
+        'red_pct': red_pct,
+        'orange_pct': orange_pct,
+        'yellow_pct': yellow_pct,
+        'green_pct': green_pct,
+    })
 
 
 

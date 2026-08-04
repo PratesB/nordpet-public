@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}NordPet - Appointments{% endblock %}
+{% block content %}
+    <!-- Calendar Header Area -->
+    <div class="flex items-center justify-between bg-surface-container-lowest p-4 md:p-6 rounded-2xl shadow-sm border border-border-teal bg-gradient-to-r from-surface-container-lowest to-surface-container-low mb-4">
+        <!-- LEFT: Navigation -->
+        <div class="flex items-center gap-6">
+            <h2 class="text-xl font-bold text-on-surface min-w-[150px] m-0">{{ current_month_year }}</h2>
+            <div class="flex items-center bg-surface-container-low rounded-full p-1 border border-border-teal shadow-sm">
+                <a href="?date={{ prev_date }}{{ vet_query }}"
+                   class="p-2 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">chevron_left</span></a>
+                <a href="?date={{ today_date }}{{ vet_query }}"
+                   class="px-4 py-1 flex items-center justify-center text-sm font-semibold text-primary hover:bg-surface-container-high rounded-full transition-colors whitespace-nowrap">{{ relative_label }}</a>
+                <a href="?date={{ next_date }}{{ vet_query }}"
+                   class="p-2 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">chevron_right</span></a>
+            </div>
+        </div>
+        <!-- RIGHT: Actions & Filters -->
+        <div class="flex items-center gap-6">
+            <!-- Subtle Metrics -->
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 text-sm text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-full border border-border-teal/50 shadow-sm whitespace-nowrap"
+                     title="Appointments on Selected Day">
+                    <span class="material-symbols-outlined text-[16px] text-primary">today</span>
+                    <span class="font-medium text-on-surface">{{ day_stat_label }}:</span>
+                    <span class="font-bold text-primary">{{ day_appointments_count }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-full border border-border-teal/50 shadow-sm whitespace-nowrap"
+                     title="Appointments in Selected Week">
+                    <span class="material-symbols-outlined text-[16px] text-primary">view_week</span>
+                    <span class="font-medium text-on-surface">{{ week_stat_label }}:</span>
+                    <span class="font-bold text-primary">{{ week_appointments_count }}</span>
+                </div>
+            </div>
+            <!-- Divisor line -->
+            <div class="h-8 w-px bg-border-teal mx-2"></div>
+            <!-- Vet Filter -->
+            <form method="GET" class="flex items-center m-0">
+                <input type="hidden" name="date" value="{{ request.GET.date }}">
+                <div class="relative flex items-center">
+                    <select name="vet_id"
+                            onchange="this.form.submit()"
+                            class="appearance-none bg-surface-container-lowest border border-border-teal text-on-surface text-sm rounded-full focus:ring-2 focus:ring-primary focus:border-primary block p-2 pl-4 pr-10 shadow-sm outline-none cursor-pointer transition-shadow hover:shadow-md h-[36px]">
+                        <option value="">All Veterinarians</option>
+                        {% for vet in vets %}
+                            <option value="{{ vet.id }}"
+                                    {% if vet.id|stringformat:'s' == selected_vet_id %}selected{% endif %}>
+                                Dr. {{ vet.first_name }} {{ vet.last_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div class="pointer-events-none absolute right-3 flex items-center justify-center text-on-surface-variant">
+                        <span class="material-symbols-outlined text-[18px]">expand_more</span>
+                    </div>
+                </div>
+            </form>
+            <!-- New Appointment Button -->
+            <a href="{% url 'clients:new_appointment' %}"
+               class="flex-none bg-primary text-on-primary text-sm font-semibold rounded-full py-2 px-5 flex items-center justify-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all h-[36px] whitespace-nowrap">
+                <span class="material-symbols-outlined text-[20px]">add</span>
+                New Appointment
+            </a>
+        </div>
+    </div>
+    <!-- Calendar Main View -->
+    <div class="flex-1 bg-surface-container-lowest rounded-2xl shadow-sm border border-border-teal flex flex-col overflow-hidden">
+        <!-- Grid Header -->
+        <div class="grid border-b border-border-teal bg-surface-container-low min-w-[1200px]"
+             style="grid-template-columns: 80px repeat({{ columns_data|length }}, minmax(0, 1fr))">
+            <div class="p-3 text-center border-r border-border-teal text-xs font-bold uppercase tracking-wider text-outline flex items-center justify-center">Time</div>
+            {% for col in columns_data %}
+                <div class="p-3 text-center {% if not forloop.last %}border-r border-border-teal{% endif %} {% if col.is_today %}bg-primary-fixed-dim/20{% endif %}">
+                    {% if view_mode == 'week' %}
+                        <div class="text-xs font-bold uppercase tracking-wider {% if col.is_today %}text-primary{% else %}text-outline{% endif %}">{{ col.label_weekday }}</div>
+                        <div class="text-base font-medium {% if col.is_today %}text-primary bg-primary text-on-primary w-8 h-8 rounded-full flex items-center justify-center mx-auto mt-1{% else %}text-on-surface{% endif %}">{{ col.label_day }}</div>
+                    {% else %}
+                        <div class="flex flex-col items-center justify-center py-1">
+                            <div class="text-[16px] font-medium tracking-tight {% if col.is_today %}text-primary font-bold{% else %}text-on-surface{% endif %}">
+                                {{ col.label_name }}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <!-- Time Grid & Appointments -->
+        <div class="flex-1 overflow-y-auto overflow-x-auto relative bg-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <!-- Time Markers Background Grid -->
+            <div class="absolute inset-0 grid z-0 min-w-[1200px]"
+                 style="grid-template-columns: 80px repeat({{ columns_data|length }}, minmax(0, 1fr))">
+                <div class="border-r border-border-teal"></div>
+                {% for col in columns_data %}
+                    <div class="{% if not forloop.last %}border-r border-border-teal{% endif %} {% if col.is_today %}bg-primary-fixed-dim/5{% endif %}">
+                    </div>
+                {% endfor %}
+            </div>
+            {% for row in grid_rows %}
+                <!-- {{ row.hour_label }} Row -->
+                <div class="grid border-b border-border-teal relative z-10 min-h-[60px] min-w-[1200px]"
+                     style="grid-template-columns: 80px repeat({{ columns_data|length }}, minmax(0, 1fr))">
+                    <!-- 30m dashed line -->
+                    <div class="absolute left-[80px] right-0 top-1/2 border-b border-border-teal border-dashed z-0 pointer-events-none">
+                    </div>
+                    <div class="p-1 text-center text-xs text-outline border-r border-border-teal flex flex-col justify-start bg-surface-container-lowest z-20">
+                        <span class="mt-1">{{ row.hour_label }}</span>
+                        <span class="text-[10px] opacity-50 mt-auto mb-1">{{ row.hour_label|slice:":3" }}30</span>
+                    </div>
+                    {% for col_appts in row.cols %}
+                        <div class="p-1 relative">
+                            {% for appt_dict in col_appts %}
+                                <!-- Appointment Card Wrapper -->
+                                <div style="position: absolute;
+                                            top: {{ appt_dict.top }}px;
+                                            height: {{ appt_dict.height }}px;
+                                            min-height: max-content;
+                                            left: calc({{ appt_dict.left_pct }}% + 2px);
+                                            width: calc({{ appt_dict.width_pct }}% - 4px)"
+                                     class="group z-30 hover:z-50">
+                                    <a href="{% url 'clients:update_appointment' appt_dict.obj.id %}"
+                                       class="w-full h-full {% if appt_dict.obj.reason == 'routine' %}bg-blue-500/20 text-blue-800 border-blue-500{% elif appt_dict.obj.reason == 'vaccine' %}bg-green-500/20 text-green-800 border-green-500{% elif appt_dict.obj.reason == 'illness' %}bg-orange-500/20 text-orange-800 border-orange-500{% elif appt_dict.obj.reason == 'emergency' %}bg-red-500/20 text-red-800 border-red-500{% elif appt_dict.obj.reason == 'surgery' %}bg-purple-500/20 text-purple-800 border-purple-500{% elif appt_dict.obj.reason == 'followup' %}bg-teal-500/20 text-teal-800 border-teal-500{% else %}bg-gray-500/20 text-gray-800 border-gray-500{% endif %} py-0.5 pl-2.5 pr-2 rounded-r-md rounded-l-sm shadow-sm border-l-[6px] hover:shadow-md hover:brightness-95 transition-all flex flex-col justify-center overflow-hidden relative group/link">
+                                        <div class="flex items-center gap-1 w-full truncate">
+                                            <span class="font-bold text-[10px] uppercase leading-none">{{ appt_dict.obj.get_reason_display }}</span>
+                                            <span class="text-[9px] opacity-80 leading-none whitespace-nowrap">{{ appt_dict.time_str }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1 w-full truncate mt-0.5">
+                                            <span class="font-semibold text-[11px] leading-none truncate">{{ appt_dict.obj.animal.name }}</span>
+                                            <span class="text-[9px] opacity-80 leading-none truncate hidden sm:inline">({{ appt_dict.obj.animal.get_specie_display }})</span>
+                                            <span class="text-[11px] font-medium leading-none truncate ml-auto">Dr. {{ appt_dict.obj.veterinarian.first_name }}</span>
+                                        </div>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

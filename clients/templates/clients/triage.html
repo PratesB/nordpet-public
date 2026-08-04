@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}NordPet - Triage: {{ pet.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto w-full px-4 md:px-8 py-6">
+    <!-- Header -->
+    <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <a href="{% url 'users:dashboard' %}" class="text-base font-bold text-primary mb-2 flex items-center gap-2 hover:underline">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                Back to Queue
+            </a>
+            <h2 class="text-3xl font-bold text-teal-900 mb-1 flex items-center gap-4">
+                Arrival Assessment
+                {% if not triage %}
+                    <span class="bg-surface-container-highest text-primary font-label-caps text-xs uppercase tracking-wider font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 align-middle mt-1">
+                        <span class="material-symbols-outlined text-[14px]">schedule</span> In Progress
+                    </span>
+                {% else %}
+                    <span class="bg-success-green/20 text-success-green font-label-caps text-xs uppercase tracking-wider font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 align-middle mt-1">
+                        <span class="material-symbols-outlined text-[14px]">task_alt</span> Completed
+                    </span>
+                {% endif %}
+            </h2>
+        </div>
+        <div class="flex items-center gap-4 bg-surface-container-lowest p-3 pr-6 rounded-full shadow-sm border border-border-teal">
+            {% if pet.photo %}
+                <img src="{{ pet.photo.url }}" alt="{{ pet.name }}" class="w-12 h-12 rounded-full object-cover border-2 border-border-teal">
+            {% else %}
+                <div class="w-12 h-12 rounded-full bg-surface-container-high border-2 border-border-teal overflow-hidden flex-shrink-0 flex items-center justify-center text-outline">
+                    <span class="material-symbols-outlined text-2xl">pets</span>
+                </div>
+            {% endif %}
+            <div>
+                <h3 class="font-title-md text-xl font-bold text-primary">{{ pet.name }}</h3>
+                <p class="font-body-sm text-sm text-on-surface-variant">Owner: {{ pet.owner.name }} &bull; {{ pet.breed }} &bull; {{ pet.date_of_birth|date:"d/m/Y" }} &bull; {{ pet.get_gender_display }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <form method="POST" action="{% url 'clients:triage' pet.id %}" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {% csrf_token %}
+        
+        <!-- Left Column: Form -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Vital Signs Section -->
+            <section class="p-6 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300" style="background-color: var(--color-surface-container-low); border-radius: 32px;">
+                <div class="flex items-center gap-3 mb-4 border-b border-border-teal pb-3">
+                    <span class="material-symbols-outlined text-primary" data-icon="monitor_heart">monitor_heart</span>
+                    <h3 class="font-title-md text-xl font-bold text-on-surface">Vital Signs</h3>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+                    <!-- HR -->
+                    <div class="space-y-2">
+                        <label class="font-body-sm text-sm text-on-surface-variant block">Heart Rate (bpm)</label>
+                        <div class="relative">
+                            <input class="w-full bg-mint-bg border-2 border-border-teal rounded-full py-3 px-4 font-body-md text-base text-on-surface focus:border-primary focus:ring-0 focus:outline-none transition-colors" placeholder="e.g. 80" type="number" name="heart_rate" {% if triage %}value="{{ triage.heart_rate }}" readonly disabled{% endif %} required/>
+                        </div>
+                    </div>
+                    <!-- RR -->
+                    <div class="space-y-2">
+                        <label class="font-body-sm text-sm text-on-surface-variant block">Respiratory Rate</label>
+                        <div class="relative">
+                            <input class="w-full bg-mint-bg border-2 border-border-teal rounded-full py-3 px-4 font-body-md text-base text-on-surface focus:border-primary focus:ring-0 focus:outline-none transition-colors" placeholder="e.g. 24" type="number" name="respiratory_rate" {% if triage %}value="{{ triage.respiratory_rate }}" readonly disabled{% endif %} required/>
+                        </div>
+                    </div>
+                    <!-- Temp -->
+                    <div class="space-y-2">
+                        <label class="font-body-sm text-sm text-on-surface-variant block">Temperature (°C)</label>
+                        <div class="relative">
+                            <input class="w-full bg-mint-bg border-2 border-border-teal rounded-full py-3 px-4 font-body-md text-base text-on-surface focus:border-primary focus:ring-0 focus:outline-none transition-colors" placeholder="e.g. 38.5" step="0.1" type="number" name="temperature" {% if triage %}value="{{ triage.temperature }}" readonly disabled{% endif %} required/>
+                        </div>
+                    </div>
+                    <!-- Weight -->
+                    <div class="space-y-2">
+                        <label class="font-body-sm text-sm text-on-surface-variant block">Weight (kg)</label>
+                        <div class="relative">
+                            <input class="w-full bg-mint-bg border-2 border-border-teal rounded-full py-3 px-4 font-body-md text-base text-on-surface focus:border-primary focus:ring-0 focus:outline-none transition-colors" placeholder="e.g. 6.2" step="0.1" type="number" name="weight" {% if triage %}value="{{ triage.weight }}" readonly disabled{% endif %} required/>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Observations Section -->
+            <section class="p-6 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300" style="background-color: var(--color-mint-bg); border-radius: 32px;">
+                <div class="flex items-center gap-3 mb-4 border-b border-border-teal pb-3">
+                    <span class="material-symbols-outlined text-primary" data-icon="edit_note">edit_note</span>
+                    <h3 class="font-title-md text-xl font-bold text-on-surface">Clinical Notes</h3>
+                </div>
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="font-body-sm text-sm text-on-surface-variant block">Tutor Chief Complaint</label>
+                        <textarea class="w-full bg-mint-bg border-2 border-border-teal rounded-DEFAULT py-3 px-4 font-body-md text-base text-on-surface focus:border-primary focus:ring-0 focus:outline-none transition-colors resize-none" placeholder="What is the primary reason for the visit today as described by the owner?" rows="3" name="complaint" {% if triage %}readonly disabled{% endif %} required>{% if triage %}{{ triage.complaint }}{% endif %}</textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="font-body-sm text-sm text-on-surface-variant block">Extra Notes</label>
+                        <textarea class="w-full bg-mint-bg border-2 border-border-teal rounded-DEFAULT py-3 px-4 font-body-md text-base text-on-surface focus:border-primary focus:ring-0 focus:outline-none transition-colors resize-none" placeholder="Note any initial visual or behavioral observations (e.g., limping, lethargic, alert, responsive)..." rows="4" name="notes" {% if triage %}readonly disabled{% endif %}>{% if triage %}{{ triage.notes }}{% endif %}</textarea>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- Right Column -->
+        <div class="space-y-6">
+            <!-- Context Card -->
+            <div class="bg-surface-container-low border-2 border-dashed p-6 relative overflow-hidden" style="border-color: #83d4d4; border-radius: 32px;">
+                <div class="absolute -right-4 -top-4" style="opacity: 0.1;">
+                    <span class="material-symbols-outlined text-primary" data-icon="medical_services" style="font-size: 120px;">medical_services</span>
+                </div>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="bg-primary-container p-2 rounded-full">
+                            <span class="material-symbols-outlined text-on-primary-container text-[20px]" data-icon="health_and_safety">health_and_safety</span>
+                        </div>
+                        <h4 class="font-title-md text-xl font-bold text-primary">Triage Priority</h4>
+                    </div>
+                    <p class="font-body-sm text-sm text-on-surface-variant mb-4">
+                        Submit the initial readings to determine the patient's preliminary triage priority code based on their vitals and clinical notes.
+                    </p>
+                    <div class="flex gap-2 mt-3">
+                        <span class="w-8 h-2 rounded-full bg-success-green transition-all duration-300" {% if triage and triage.risk_level == 'green' %}style="opacity: 1; box-shadow: 0 0 8px var(--color-success-green);"{% else %}style="opacity: 0.25;"{% endif %}></span>
+                        <span class="w-8 h-2 rounded-full bg-secondary-container transition-all duration-300" {% if triage and triage.risk_level == 'yellow' %}style="opacity: 1; box-shadow: 0 0 8px var(--color-secondary-container);"{% else %}style="opacity: 0.25;"{% endif %}></span>
+                        <span class="w-8 h-2 rounded-full bg-warning-amber transition-all duration-300" {% if triage and triage.risk_level == 'orange' %}style="opacity: 1; box-shadow: 0 0 8px var(--color-warning-amber);"{% else %}style="opacity: 0.25;"{% endif %}></span>
+                        <span class="w-8 h-2 rounded-full bg-error-red transition-all duration-300" {% if triage and triage.risk_level == 'red' %}style="opacity: 1; box-shadow: 0 0 8px var(--color-error-red);"{% else %}style="opacity: 0.25;"{% endif %}></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Button -->
+            {% if not triage %}
+                <button type="submit" class="w-full bg-primary text-on-primary font-headline-sm text-2xl font-bold py-4 px-6 rounded-full shadow-md hover:shadow-lg hover:-translate-y-1 hover:bg-surface-tint transition-all duration-300 flex justify-center items-center gap-3 cursor-pointer">
+                    <span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+                    Submit Triage
+                </button>
+                <p class="text-center font-body-sm text-sm text-on-surface-variant mt-3">
+                    This will save the vitals and generate a triage score.
+                </p>
+            {% else %}
+                <div class="w-full bg-surface-variant text-on-surface-variant font-headline-sm text-2xl font-bold py-4 px-6 rounded-full shadow-inner flex justify-center items-center gap-3">
+                    <span class="material-symbols-outlined">lock</span>
+                    Triage Completed
+                </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}

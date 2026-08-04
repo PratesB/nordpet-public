@@ -16,3 +16,24 @@ function updateClock() {
 
 setInterval(updateClock, 1000);
 updateClock(); // Initial call
+
+// Dashboard Filters
+function filterAppointments(filterType) {
+    const buttons = ['all', 'triaged', 'pending'];
+    buttons.forEach(type => {
+        const btn = document.getElementById(`btn-filter-${type}`);
+        if (!btn) return;
+        btn.dataset.state = (type === filterType) ? 'active' : 'inactive';
+    });
+
+    const cards = document.querySelectorAll('.appointment-card');
+    cards.forEach(card => {
+        if (filterType === 'all') {
+            card.style.display = 'flex';
+        } else if (filterType === 'triaged') {
+            card.style.display = (card.dataset.triage === 'true') ? 'flex' : 'none';
+        } else if (filterType === 'pending') {
+            card.style.display = (card.dataset.triage === 'false') ? 'flex' : 'none';
+        }
+    });
+}

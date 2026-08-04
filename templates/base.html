@@ -35,42 +35,48 @@
                 {% block sidebar_nav %}
                     <!-- Dashboard -->
                     <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'dashboard' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
-                       href="{% url 'users:dashboard'%}">   
+                       href="{% url 'users:dashboard' %}">
                         <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
                         Dashboard
                     </a>
                     <!-- Patients -->
                     <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'patients' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
-                       href="#">
+                       href="{% url 'clients:patients' %}">
                         <span class="material-symbols-outlined" data-icon="pets">pets</span>
                         Patients
                     </a>
                     <!-- Appointments -->
                     <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'appointments' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
-                       href="#">
+                       href="{% url 'clients:appointments' %}">
                         <span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
                         Appointments
                     </a>
+                    <!-- Clients -->
+                    <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'client_list' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
+                       href="{% url 'clients:client_list' %}">
+                        <span class="material-symbols-outlined" data-icon="groups">groups</span>
+                        Clients
+                    </a>
+                    {% if request.user.is_authenticated and request.user.role == 'ADM' %}
+                        <!-- Team Members (Admin Only) -->
+                        <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'team' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
+                           href="{% url 'users:team' %}">
+                            <span class="material-symbols-outlined" data-icon="person">person</span>
+                            Team Members
+                        </a>
+                    {% endif %}
                     <!-- Settings -->
                     <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'settings' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
                        href="#">
                         <span class="material-symbols-outlined" data-icon="settings">settings</span>
                         Settings
                     </a>
-                    {% if request.user.is_authenticated and request.user.role == 'ADM' %}
-                        <!-- Team Members (Admin Only) -->
-                        <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'team' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
-                           href="{% url 'users:team'%}">
-                            <span class="material-symbols-outlined" data-icon="person">person</span>
-                            Team Members
-                        </a>
-                    {% endif %}
                 {% endblock %}
             </nav>
             <!-- CTA -->
             <div class="px-6 mt-auto">
                 <a class="w-full bg-secondary-container text-on-secondary-container font-button-text text-button-text rounded-full py-4 px-6 flex items-center justify-center gap-2 hover:shadow-lg hover:-translate-y-1 transition-all"
-                   href="#">
+                   href="{% url 'clients:new_client' %}">
                     <span class="material-symbols-outlined text-[20px]">person_add</span>
                     New Client
                 </a>
@@ -151,8 +157,7 @@
                         {% endfor %}
                     </div>
                 {% endif %}
-                {% block content %}
-                {% endblock %}
+                {% block content %}{% endblock %}
             </div>
         </main>
         {% block modals %}{% endblock %}

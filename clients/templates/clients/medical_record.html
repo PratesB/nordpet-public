@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}NordPet - Medical Record: {{ pet.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto w-full px-4 md:px-8 py-6 [&_.material-symbols-outlined]:[font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_24]">
+    
+    <!-- Patient Information -->
+    <div class="bg-surface-container-lowest rounded-[1.5rem] shadow-sm p-6 mb-8">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 w-full">
+            
+            <!-- Circular Photo -->
+            <div class="w-24 h-24 rounded-full bg-surface-container-high border-4 border-surface-container-lowest shadow-sm overflow-hidden flex-shrink-0 flex items-center justify-center text-outline">
+                {% if pet.photo %}
+                    <img src="{{ pet.photo.url }}" class="w-full h-full object-cover" alt="{{ pet.name }}">
+                {% else %}
+                    <span class="material-symbols-outlined text-5xl">pets</span>
+                {% endif %}
+            </div>
+            
+            <!-- Details -->
+            <div class="flex-1 w-full">
+                <!-- Name and Actions Row -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+                    <div class="flex items-center gap-3">
+                        <h2 class="font-headline-lg text-3xl font-bold text-primary">{{ pet.name }}</h2>
+                        {% if pet.gender == 'M' %}
+                            <span class="material-symbols-outlined text-info-blue text-[22px]" title="Male">male</span>
+                        {% elif pet.gender == 'F' %}
+                            <span class="material-symbols-outlined text-pink-500 text-[22px]" title="Female">female</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex items-center flex-wrap gap-3 shrink-0">
+                        <a href="{% url 'clients:patients' %}" class="text-primary hover:underline font-medium flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                            Back to Patients
+                        </a>
+                        {% if user.role == 'VET' %}
+                            {% if active_appointment and active_appointment.veterinarian == user %}
+                                {% if active_appointment.status == 'scheduled' %}
+                                    {% if triage_today or active_appointment.reason == 'emergency' %}
+                                        <a href="{% url 'clients:start_consultation' pet.id %}" class="bg-primary text-white px-5 py-2.5 rounded-full flex items-center gap-2 font-bold hover:shadow-lg hover:bg-primary/90 transition-all transform hover:-translate-y-0.5">
+                                            <span class="material-symbols-outlined text-[20px]">play_circle</span>
+                                            Start Consultation
+                                        </a>
+                                    {% else %}
+                                        <div class="bg-surface-container-highest text-on-surface-variant px-5 py-2.5 rounded-full flex items-center gap-2 font-bold opacity-70 cursor-not-allowed" title="Triage is required before starting the consultation">
+                                            <span class="material-symbols-outlined text-[20px]">info</span>
+                                            Waiting for Triage
+                                        </div>
+                                    {% endif %}
+                                {% elif active_appointment.status == 'in_progress' %}
+                                    <div class="flex items-center bg-red-50 text-red-700 rounded-full overflow-hidden shadow-sm border border-red-200 ml-2">
+                                        <div class="px-4 py-2.5 flex items-center gap-2 font-mono font-bold text-base bg-red-100/50 border-r border-red-200">
+                                            <span class="relative flex h-3 w-3">
+                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
+                                            </span>
+                                            <span id="consultation-timer" data-start="{{ active_appointment.started_at|date:'c' }}">00:00:00</span>
+                                        </div>
+                                        <a href="{% url 'clients:end_consultation' active_appointment.id %}" class="px-5 py-2.5 flex items-center gap-2 font-bold hover:bg-red-200 transition-colors group">
+                                            <span class="material-symbols-outlined text-[20px] group-hover:animate-pulse">stop_circle</span>
+                                            End Consultation
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <p class="font-body-md text-base text-on-surface-variant mb-3 flex items-center flex-wrap gap-x-2">
+                    <span>{{ pet.get_specie_display }}</span> <span class="opacity-50">•</span>
+                    <span>{{ pet.breed }}</span> <span class="opacity-50">•</span>
+                    <span class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[16px]">cake</span>
+                        {% if pet.date_of_birth %}
+                            {{ pet.date_of_birth|date:"d M, Y" }} {% if pet.is_estimated_dob %}<span class="text-xs">(Estimated)</span>{% endif %}
+                        {% else %}
+                            Unknown DOB
+                        {% endif %}
+                    </span>
+                </p>
+
+                <!-- Tutor Info Bar -->
+                <div class="inline-flex flex-wrap items-center gap-3 md:gap-4 text-sm bg-surface-container px-4 py-2 rounded-xl text-on-surface-variant border border-border-teal/30">
+                    <div class="flex items-center gap-1.5 font-bold text-primary">
+                        <span class="material-symbols-outlined text-[18px]">person</span>
+                        {{ pet.owner.name }}
+                    </div>
+                    <div class="w-px h-4 bg-border-teal hidden sm:block"></div>
+                    <div class="flex items-center gap-1.5 font-medium">
+                        <span class="material-symbols-outlined text-[16px] text-outline">call</span>
+                        {{ pet.owner.phone }}
+                    </div>
+                    <div class="w-px h-4 bg-border-teal hidden sm:block"></div>
+                    <div class="flex items-center gap-1.5 font-medium break-all">
+                        <span class="material-symbols-outlined text-[16px] text-outline">mail</span>
+                        {{ pet.owner.email }}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Split Layout: Form (Left) and Timeline (Right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- LEFT COLUMN: New Record Form -->
+        <div class="lg:col-span-1">
+            <div class="bg-surface-container-lowest rounded-[1.5rem] shadow-sm p-6 sticky top-6">
+                <h3 class="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    New Record
+                </h3>
+                
+                <form action="{% url 'clients:upload_medical_record' pet.id %}" method="POST" enctype="multipart/form-data" class="space-y-5">
+                    {% csrf_token %}
+                    
+                    <div>
+                        <label class="block font-label-caps text-xs font-bold uppercase tracking-wider text-on-surface mb-2">Link To</label>
+                        <div class="relative">
+                            <select name="appointment_id" class="w-full rounded-xl border border-border-teal pl-4 pr-10 py-3 focus:border-primary focus:ring-2 focus:ring-primary/20 font-body-sm text-sm outline-none transition-all bg-transparent appearance-none cursor-pointer">
+                                <option value="standalone">Standalone Record</option>
+                                {% for appt in appointments %}
+                                    <option value="{{ appt.id }}" {% if active_appointment and active_appointment.id == appt.id %}selected{% endif %}>
+                                        Consultation - {{ appt.scheduled_at|date:"d/m/Y H:i" }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="pointer-events-none absolute top-1/2 -translate-y-1/2 right-4 text-outline flex items-center justify-center">
+                                <span class="material-symbols-outlined text-[20px] leading-none">keyboard_arrow_down</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block font-label-caps text-xs font-bold uppercase tracking-wider text-on-surface mb-2">Clinical Note</label>
+                        <textarea name="clinical_note" rows="4" placeholder="Enter clinical observations..."
+                                  class="w-full rounded-xl border border-border-teal px-4 py-3 focus:border-primary focus:ring-2 focus:ring-primary/20 font-body-sm text-sm outline-none transition-all resize-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block font-label-caps text-xs font-bold uppercase tracking-wider text-on-surface mb-2">Exam Result (PDF)</label>
+                        <input type="file" name="exam_pdf" accept="application/pdf"
+                               class="w-full rounded-xl border border-border-teal px-4 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 font-body-sm text-sm outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-container file:text-on-primary-container hover:file:bg-primary hover:file:text-white cursor-pointer" />
+                    </div>
+
+                    <div>
+                        <label class="block font-label-caps text-xs font-bold uppercase tracking-wider text-on-surface mb-2">Consultation Media</label>
+                        <input type="file" name="consultation_media" accept="audio/*,video/*"
+                               class="w-full rounded-xl border border-border-teal px-4 py-2 focus:border-primary focus:ring-2 focus:ring-primary/20 font-body-sm text-sm outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-secondary-container file:text-on-secondary-container hover:file:bg-secondary hover:file:text-white cursor-pointer" />
+                    </div>
+
+                    <button type="submit" class="w-full bg-primary text-white font-button-text text-sm font-semibold px-6 py-3 rounded-full hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 mt-4 cursor-pointer">
+                        <span class="material-symbols-outlined text-[20px]">save</span>
+                        Save Record
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Medical History -->
+        <div class="lg:col-span-2">
+            <h3 class="text-xl font-bold text-primary mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined">history</span>
+                Medical History
+            </h3>
+
+            {% if not timeline %}
+                <div class="bg-surface-container-lowest rounded-[1.5rem] p-10 text-center border-2 border-dashed border-border-teal text-outline">
+                    <span class="material-symbols-outlined text-4xl mb-2">folder_open</span>
+                    <p>No medical history found for this patient yet.</p>
+                </div>
+            {% else %}
+                <div class="relative pb-8">
+                    
+                    {% for item in timeline %}
+                        <div class="relative mb-12">
+                            
+                            <!-- Content Card -->
+                            <div class="bg-surface-container-lowest rounded-[1.5rem] shadow-sm p-5 md:p-6 border border-transparent hover:border-border-teal transition-all">
+                                
+                                <div class="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-border-teal">
+                                    <div>
+                                        <h4 class="font-bold text-on-surface flex items-center gap-2">
+                                            {% if item.type == 'appointment' %}
+                                                Consultation
+                                            {% else %}
+                                                Avulse Record
+                                            {% endif %}
+                                        </h4>
+                                        <p class="text-xs text-on-surface-variant flex items-center gap-1 mt-1">
+                                            <span class="material-symbols-outlined text-[14px]">schedule</span>
+                                            {{ item.scheduled_at|date:"l, F d, Y" }} at {{ item.scheduled_at|date:"H:i" }}
+                                        </p>
+                                    </div>
+                                    {% if item.type == 'appointment' and item.veterinarian %}
+                                        <div class="flex items-center gap-2 bg-surface-container-highest px-3 py-1.5 rounded-full text-xs font-medium text-on-surface-variant">
+                                            <span class="material-symbols-outlined text-[14px]">badge</span>
+                                            Dr. {{ item.veterinarian.first_name|default:item.veterinarian.email }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- CONTENT: IF IT'S AN APPOINTMENT -->
+                                {% if item.type == 'appointment' %}
+                                    <div class="space-y-4">
+                                        <p class="text-sm text-on-surface"><span class="font-bold text-on-surface-variant">Reason:</span> {{ item.get_reason_display }}</p>
+                                        
+                                        {% if item.notes %}
+                                            <div class="bg-surface-container p-4 rounded-xl text-sm text-on-surface italic">
+                                                "{{ item.notes }}"
+                                            </div>
+                                        {% endif %}
+
+                                        <!-- Show Triage if available -->
+                                        {% if item.triage_obj %}
+                                            <div class="mt-4 border border-border-teal rounded-xl overflow-hidden">
+                                                <div class="bg-surface-container-high px-4 py-2 text-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-2">
+                                                    <span class="material-symbols-outlined text-[16px]">monitor_heart</span>
+                                                    Triage Data
+                                                </div>
+                                                <div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-surface-container-lowest">
+                                                    <div>
+                                                        <span class="block text-xs text-outline mb-1">Weight</span>
+                                                        <span class="font-medium">{{ item.triage_obj.weight }} kg</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="block text-xs text-outline mb-1">Temp.</span>
+                                                        <span class="font-medium">{{ item.triage_obj.temperature }} °C</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="block text-xs text-outline mb-1">Heart Rate</span>
+                                                        <span class="font-medium">{{ item.triage_obj.heart_rate }} bpm</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="block text-xs text-outline mb-1">Risk</span>
+                                                        <span class="font-medium capitalize text-error-red">{{ item.triage_obj.get_risk_level_display }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <!-- Associated files for this consultation (via medical_records reverse relation) -->
+                                        {% if item.records_list %}
+                                            <div class="mt-4 space-y-3">
+                                                {% for rec in item.records_list %}
+                                                    {% if rec.clinical_note %}
+                                                        <div class="bg-surface-container-high p-4 rounded-xl text-sm text-on-surface">
+                                                            <div class="flex items-center justify-between mb-2">
+                                                                <div class="flex items-center gap-1 text-xs text-primary font-bold uppercase">
+                                                                    <span class="material-symbols-outlined text-[14px]">edit_note</span> Clinical Note
+                                                                </div>
+                                                                <span class="text-[11px] text-outline">{{ rec.created_at|date:"d M, Y - H:i" }}</span>
+                                                            </div>
+                                                            {{ rec.clinical_note|linebreaks }}
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                
+                                                <div class="flex flex-wrap gap-3">
+                                                    {% for rec in item.records_list %}
+                                                        {% if rec.exam_pdf %}
+                                                            <a href="{{ rec.exam_pdf.url }}" target="_blank" title="{{ rec.exam_pdf_filename }}" class="flex items-center gap-2 px-4 py-2 bg-primary-container text-on-primary-container rounded-lg text-sm font-medium hover:bg-primary hover:text-white transition-colors">
+                                                                <span class="material-symbols-outlined">picture_as_pdf</span>
+                                                                <span class="truncate max-w-[200px]">{{ rec.exam_pdf_filename }}</span>
+                                                            </a>
+                                                        {% endif %}
+                                                        {% if rec.consultation_media %}
+                                                            <a href="{{ rec.consultation_media.url }}" target="_blank" title="{{ rec.consultation_media_filename }}" class="flex items-center gap-2 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-lg text-sm font-medium hover:bg-secondary hover:text-white transition-colors">
+                                                                <span class="material-symbols-outlined">play_circle</span>
+                                                                <span class="truncate max-w-[200px]">{{ rec.consultation_media_filename }}</span>
+                                                            </a>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                <!-- CONTENT: IF IT'S A STANDALONE RECORD -->
+                                {% elif item.type == 'standalone_record' %}
+                                    <div class="space-y-4">
+                                        {% if item.clinical_note %}
+                                            <div class="bg-surface-container-high p-4 rounded-xl text-sm text-on-surface">
+                                                <div class="flex items-center gap-1 text-xs text-primary font-bold uppercase mb-2">
+                                                    <span class="material-symbols-outlined text-[14px]">edit_note</span> Clinical Note
+                                                </div>
+                                                {{ item.clinical_note|linebreaks }}
+                                            </div>
+                                        {% endif %}
+                                        
+                                        {% if item.exam_pdf or item.consultation_media %}
+                                            <div class="flex flex-wrap gap-3">
+                                                {% if item.exam_pdf %}
+                                                    <a href="{{ item.exam_pdf.url }}" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-primary-container text-on-primary-container rounded-lg text-sm font-medium hover:bg-primary hover:text-white transition-colors">
+                                                        <span class="material-symbols-outlined">picture_as_pdf</span>
+                                                        View Exam PDF
+                                                    </a>
+                                                {% endif %}
+                                                {% if item.consultation_media %}
+                                                    <a href="{{ item.consultation_media.url }}" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-lg text-sm font-medium hover:bg-secondary hover:text-white transition-colors">
+                                                        <span class="material-symbols-outlined">play_circle</span>
+                                                        View Media
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+
+                            </div>
+                        </div>
+                    {% endfor %}
+                    
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/clients/medical_record.js' %}"></script>
+{% endblock %}
