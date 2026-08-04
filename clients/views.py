@@ -202,9 +202,15 @@ def get_available_times(request):
     if appointment_id:
         appointments = appointments.exclude(id=appointment_id)
 
+    now = timezone.now()
     available_slots = []
     for slot in time_slots:
         slot_dt = timezone.make_aware(datetime.combine(query_date, slot))
+        
+        # Do not allow past times
+        if slot_dt < now:
+            continue
+            
         is_busy = False
         for appt in appointments:
             appt_end = appt.scheduled_at + timedelta(minutes=appt.duration)
