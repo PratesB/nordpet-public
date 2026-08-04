@@ -39,12 +39,6 @@
                         <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
                         Dashboard
                     </a>
-                    <!-- Clients -->
-                    <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'client_list' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
-                       href="{% url 'clients:client_list' %}">
-                        <span class="material-symbols-outlined" data-icon="groups">groups</span>
-                        Clients
-                    </a>
                     <!-- Patients -->
                     <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'patients' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
                        href="{% url 'clients:patients' %}">
@@ -57,11 +51,11 @@
                         <span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
                         Appointments
                     </a>
-                    <!-- Settings -->
-                    <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'settings' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
-                       href="#">
-                        <span class="material-symbols-outlined" data-icon="settings">settings</span>
-                        Settings
+                    <!-- Clients -->
+                    <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'client_list' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
+                       href="{% url 'clients:client_list' %}">
+                        <span class="material-symbols-outlined" data-icon="groups">groups</span>
+                        Clients
                     </a>
                     {% if request.user.is_authenticated and request.user.role == 'ADM' %}
                         <!-- Team Members (Admin Only) -->
@@ -71,6 +65,12 @@
                             Team Members
                         </a>
                     {% endif %}
+                    <!-- Settings -->
+                    <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'settings' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
+                       href="#">
+                        <span class="material-symbols-outlined" data-icon="settings">settings</span>
+                        Settings
+                    </a>
                 {% endblock %}
             </nav>
             <!-- CTA -->
