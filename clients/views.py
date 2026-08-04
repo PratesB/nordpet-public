@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+import os
 
 
 User = get_user_model()
@@ -585,20 +586,31 @@ def medical_record(request, pet_id):
     appointments = list(pet.appointments.all().order_by('-scheduled_at'))
     completed_appointments = []
     
+    
     for appt in appointments:
-        if appt.status == 'completed':
+        # Find triage done on the same day as the appointment
+        triage_obj = Triage.objects.filter(
+            animal=pet,
+            created_at__date=appt.scheduled_at.date()
+        ).first()
+        
+        appt_records = list(appt.medical_records.all())
+        
+        if appt.status == 'completed' or appt_records or triage_obj:
             appt.type = 'appointment'
-            # Find triage done on the same day as the appointment
-            appt.triage_obj = Triage.objects.filter(
-                animal=pet,
-                created_at__date=appt.scheduled_at.date()
-            ).first()
+            appt.triage_obj = triage_obj
+            for rec in appt_records:
+                rec.exam_pdf_filename = os.path.basename(rec.exam_pdf.name) if rec.exam_pdf else ''
+                rec.consultation_media_filename = os.path.basename(rec.consultation_media.name) if rec.consultation_media else ''
+            appt.records_list = appt_records
             completed_appointments.append(appt)
 
     standalone_records = pet.medical_records.filter(appointment__isnull=True).order_by('-created_at')
     standalone_events = list(standalone_records)
     for rec in standalone_events:
         rec.type = 'standalone_record'
+        rec.exam_pdf_filename = os.path.basename(rec.exam_pdf.name) if rec.exam_pdf else ''
+        rec.consultation_media_filename = os.path.basename(rec.consultation_media.name) if rec.consultation_media else ''
         rec.scheduled_at = rec.created_at 
 
     timeline = completed_appointments + standalone_events
