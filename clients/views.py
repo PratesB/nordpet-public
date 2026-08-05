@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.contrib.auth.decorators import login_required
-from .models import Client, Animal, Appointment, Triage, MedicalRecord
+from .models import Client, Animal, Appointment, Triage, MedicalRecord, ChatMessage
 from datetime import datetime, timedelta
 from django.db import transaction
 from django.contrib import messages
@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 import os
-
+import json
 
 User = get_user_model()
 
@@ -763,3 +763,52 @@ def check_ai_summary(request, record_id):
         'summary': bool(record.ai_summary_consultation),
         'exam_interpretation': bool(record.ai_exam_interpretation)
     })
+
+
+
+
+
+@login_required(login_url='users:login')
+def animal_chat_view(request, pet_id):
+    pet = get_object_or_404(Animal, pk=pet_id)
+    chat_history = pet.chat_messages.all()
+    return render(request, 'clients/animal_chat.html', {'pet': pet, 'chat_history': chat_history})
+
+@login_required(login_url='users:login')
+def animal_chat_api(request, pet_id):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            question = data.get('question')
+            
+            pet = get_object_or_404(Animal, pk=pet_id)
+            
+            # Fetch history from DB (before saving the current question)
+            # LIMIT: I only fetch the last 6 messages (approx 3 past interactions) to save LLM tokens and speed up response
+            history_qs = ChatMessage.objects.filter(animal=pet).order_by('-created_at')[:6]
+            history = reversed(history_qs) # reverse back to chronological order
+            history_tuples = [(msg.role, msg.content) for msg in history]
+            
+            # Save User Message to DB
+            ChatMessage.objects.create(animal=pet, role='user', content=question, sender=request.user)
+            
+            from ai.agents import AssistantAgent
+            
+            def event_stream():
+                agent = AssistantAgent()
+                full_response = ""
+                for chunk in agent.stream_run(animal_id=pet.id, question=question, chat_history=history_tuples):
+                    content = chunk.content if hasattr(chunk, 'content') else str(chunk)
+                    full_response += content
+                    yield f"data: {json.dumps({'chunk': content})}\n\n"
+                
+                # Save AI response to DB
+                ChatMessage.objects.create(animal=pet, role='assistant', content=full_response)
+                yield "data: [DONE]\n\n"
+                
+            return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+            
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    
+    return JsonResponse({"error": "Invalid request method"}, status=405)

@@ -109,3 +109,77 @@ class ExamAnalysisAgent(BaseAgent):
             'language': self.language, 
             'audience': self.audience
         })
+
+
+
+class AssistantAgent(BaseAgent):
+    def _prompt(self):
+        from langchain_core.prompts import MessagesPlaceholder
+        skill_path = os.path.join(settings.BASE_DIR, 'ai', 'skills', 'assistant', 'SKILL.md')
+        with open(skill_path, 'r', encoding='utf-8') as f:
+            assistant_prompt_text = f.read()
+
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", assistant_prompt_text),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("human", "{question}")
+        ])
+        return prompt
+        
+    def _get_context(self, animal_id, question):
+        from langchain_community.vectorstores import LanceDB
+        from langchain_openai import OpenAIEmbeddings
+        import lancedb
+        from clients.models import Animal
+        
+        try:
+            pet = Animal.objects.get(id=animal_id)
+            dob_str = pet.date_of_birth.strftime('%d/%m/%Y') if pet.date_of_birth else 'Unknown'
+            created_at_str = pet.created_at.strftime('%d/%m/%Y %H:%M') if pet.created_at else 'Unknown'
+            updated_at_str = pet.updated_at.strftime('%d/%m/%Y %H:%M') if pet.updated_at else 'Unknown'
+            
+            basic_info = (f"Patient Name: {pet.name}\nSpecies: {pet.get_specie_display()}\n"
+                          f"Breed: {pet.breed}\nGender: {pet.get_gender_display()}\n"
+                          f"Date of Birth: {dob_str}\nRegistration Date: {created_at_str}\n"
+                          f"Last Updated: {updated_at_str}\nOwner: {pet.owner.name}")
+        except Exception:
+            basic_info = "Unknown Patient"
+        
+        db_path = os.path.join(settings.BASE_DIR, "lancedb_data")
+        db = lancedb.connect(db_path)
+        embeddings = OpenAIEmbeddings(api_key=settings.OPENAI_API_KEY)
+        
+        try:
+            vectorstore = LanceDB(connection=db, embedding=embeddings, table_name="animal_knowledge")
+            retriever = vectorstore.as_retriever(search_kwargs={'k': 3, 'filter': f"metadata.animal_id = {animal_id}"})
+            docs = retriever.invoke(question)
+            context = "\n\n".join([doc.page_content for doc in docs])
+        except Exception as e:
+            print(f"Error querying LanceDB for AssistantAgent: {e}")
+            context = ""
+            
+        if not context.strip():
+            context = "No previous medical records found for this patient in the system."
+            
+        return f"=== PATIENT BASIC INFO ===\n{basic_info}\n\n=== MEDICAL HISTORY ===\n{context}"
+
+    def run(self, animal_id, question, chat_history):
+        context = self._get_context(animal_id, question)
+        
+        chain = self._prompt() | self.llm
+        result = chain.invoke({
+            "context": context,
+            "chat_history": chat_history,
+            "question": question
+        })
+        return result.content
+        
+    def stream_run(self, animal_id, question, chat_history):
+        context = self._get_context(animal_id, question)
+        
+        chain = self._prompt() | self.llm
+        return chain.stream({
+            "context": context,
+            "chat_history": chat_history,
+            "question": question
+        })

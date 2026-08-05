@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Client, Animal, Appointment, Triage, MedicalRecord
+from .models import Client, Animal, Appointment, Triage, MedicalRecord, ChatMessage
 
 
 @admin.register(Client)
@@ -39,4 +39,12 @@ class MedicalRecordAdmin(admin.ModelAdmin):
     list_display = ('id', 'animal', 'veterinarian', 'appointment', 'created_at')
     list_filter = ('created_at', 'veterinarian')
     search_fields = ('animal__name', 'veterinarian__first_name', 'veterinarian__email', 'clinical_note')
+    ordering = ('-created_at',)
+
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'animal', 'role', 'sender', 'created_at')
+    list_filter = ('role', 'created_at')
+    search_fields = ('animal__name', 'content')
     ordering = ('-created_at',)

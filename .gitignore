@@ -228,3 +228,6 @@ node_modules/
 
 # Tailwind Compiled CSS
 static/css/output.css
+
+# LanceDB (Vector Database)
+/lancedb_data/

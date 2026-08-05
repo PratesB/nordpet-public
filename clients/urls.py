@@ -24,4 +24,6 @@ urlpatterns = [
     path('appointment/<uuid:appointment_id>/end/', views.end_consultation, name='end_consultation'),
     path('triage/<int:pet_id>/', views.triage, name='triage'),
     path('check-summary/<int:record_id>/', views.check_ai_summary, name='check_summary'),
+    path('animal-chat/<int:pet_id>/', views.animal_chat_view, name='animal_chat_view'),
+    path('api/animal-chat/<int:pet_id>/', views.animal_chat_api, name='animal_chat_api'),
 ]

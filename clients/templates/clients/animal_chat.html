@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}NordPet - Patient AI Chat: {{ pet.name }}{% endblock %}
+
+{% block content %}
+<div id="chat-container" 
+     data-pet-id="{{ pet.id }}" 
+     data-doctor-name="{% if request.user.first_name %}Dr. {{ request.user.first_name }} {{ request.user.last_name }}{% else %}{{ request.user.email }}{% endif %}"
+     class="flex flex-col bg-surface-container-lowest rounded-3xl shadow-sm border border-border-teal overflow-hidden font-sans"
+     style="height: calc(100vh - 120px);">
+    
+    <!-- Top Navigation Bar -->
+    <header class="flex items-start justify-between px-6 py-4 border-b border-border-teal bg-surface-container-lowest">
+        <div class="flex items-start gap-4">
+            <div class="w-14 h-14 mt-1 rounded-full overflow-hidden border-2 border-surface-container-highest flex items-center justify-center bg-surface-container-high shrink-0">
+                {% if pet.photo %}
+                    <img src="{{ pet.photo.url }}" class="w-full h-full object-cover" alt="{{ pet.name }}">
+                {% else %}
+                    <span class="material-symbols-outlined text-2xl text-outline">pets</span>
+                {% endif %}
+            </div>
+            <div class="flex flex-col">
+                <div class="flex items-end gap-3 mb-1">
+                    <h1 class="font-bold text-xl text-on-surface m-0 leading-none">{{ pet.name }}</h1>
+                    <p class="text-xs text-on-surface-variant m-0 leading-none pb-0.5">
+                        {{ pet.get_specie_display }} • {{ pet.breed }} • {{ pet.get_gender_display }}
+                    </p>
+                </div>
+                
+                <!-- Tutor Info Bar -->
+                <div class="inline-flex flex-wrap items-center gap-3 text-xs bg-surface-container px-3 py-1.5 rounded-lg text-on-surface-variant mt-2 border border-border-teal/50">
+                    <div class="flex items-center gap-1.5 font-bold text-primary">
+                        <span class="material-symbols-outlined text-[16px]">person</span>
+                        {{ pet.owner.name }}
+                    </div>
+                    <div class="w-px h-3 bg-border-teal"></div>
+                    <div class="flex items-center gap-1.5 font-medium">
+                        <span class="material-symbols-outlined text-[14px] text-outline">call</span>
+                        {{ pet.owner.phone }}
+                    </div>
+                    <div class="w-px h-3 bg-border-teal"></div>
+                    <div class="flex items-center gap-1.5 font-medium">
+                        <span class="material-symbols-outlined text-[14px] text-outline">mail</span>
+                        {{ pet.owner.email }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-4 shrink-0">
+            <a href="{% url 'clients:medical_record' pet.id %}" class="w-10 h-10 rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container-highest transition-colors" title="Close Chat">
+                <span class="material-symbols-outlined text-2xl">close</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Chat Messages Area -->
+    <div id="chat-messages" class="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6 bg-background scroll-smooth">
+        <!-- Greeting Message -->
+        <div class="flex flex-col w-full max-w-[85%]">
+            <div class="ai-meta text-xs text-on-surface-variant mb-1.5 pl-1 font-medium flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[14px] text-primary">smart_toy</span>
+                NordPet AI Assistant
+            </div>
+            <div class="bg-surface-container-lowest border-l-4 border-primary shadow-sm rounded-2xl rounded-tl-sm p-5 text-on-surface text-[15px] leading-relaxed w-full">
+                Hello Doctor! I have access to <strong>{{ pet.name }}'s</strong> entire long-term medical memory. 
+                <br><br>
+                You can ask me about past consultations, exams, triage records, or clinical notes.
+            </div>
+        </div>
+
+        <!-- Persisted Chat History -->
+        {% for msg in chat_history %}
+            {% if msg.role == 'user' %}
+                <div class="flex flex-col w-full max-w-[80%] self-end items-end">
+                    <div class="user-meta text-xs text-on-surface-variant mb-1.5 pr-1 font-medium flex items-center gap-1">
+                        {{ msg.created_at|date:"d/m/Y - H:i" }} &nbsp; 
+                        <strong class="text-on-surface">
+                            {% if msg.sender %}
+                                {% if msg.sender.first_name %}Dr. {{ msg.sender.first_name }} {{ msg.sender.last_name }}{% else %}{{ msg.sender.email }}{% endif %}
+                            {% else %}
+                                User
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <div class="user-text bg-primary shadow-sm text-white rounded-2xl rounded-tr-sm p-4 text-[15px] leading-relaxed">{{ msg.content }}</div>
+                </div>
+            {% else %}
+                <div class="flex flex-col w-full max-w-[85%]">
+                    <div class="ai-meta text-xs text-on-surface-variant mb-1.5 pl-1 font-medium flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[14px] text-primary">smart_toy</span>
+                        <strong class="text-on-surface">AI Assistant</strong> &nbsp; <span class="opacity-70">{{ msg.created_at|date:"d/m/Y - H:i" }}</span>
+                    </div>
+                    <div class="ai-text bg-surface-container-lowest border-l-4 border-primary shadow-sm rounded-2xl rounded-tl-sm p-5 text-on-surface text-[15px] leading-relaxed w-full">
+                        {{ msg.content|linebreaksbr }}
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Input Area -->
+    <div class="px-8 py-5 bg-surface-container-lowest border-t border-border-teal">
+        <form id="chat-form" class="flex items-center border border-border-teal rounded-full bg-surface-container py-1.5 px-1.5 pl-6 transition-all focus-within:border-primary focus-within:ring-1 focus-within:ring-primary focus-within:bg-surface-container-lowest">
+            <input type="text" id="chat-input" class="flex-1 border-none bg-transparent text-[15px] outline-none text-on-surface py-2 placeholder-outline focus:ring-0" placeholder="Ask about {{ pet.name }}'s medical history..." required autocomplete="off">
+            <button type="submit" id="chat-submit" class="w-11 h-11 rounded-full bg-primary text-white flex items-center justify-center border-none cursor-pointer transition-opacity ml-3 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90" disabled>
+                <span class="material-symbols-outlined text-[20px]">send</span>
+            </button>
+        </form>
+    </div>
+
+</div>
+
+<!-- Message Templates for JavaScript -->
+<template id="user-message-template">
+    <div class="flex flex-col w-full max-w-[80%] self-end items-end">
+        <div class="user-meta text-xs text-on-surface-variant mb-1.5 pr-1 font-medium flex items-center gap-1"></div>
+        <div class="user-text bg-primary shadow-sm text-white rounded-2xl rounded-tr-sm p-4 text-[15px] leading-relaxed"></div>
+    </div>
+</template>
+
+<template id="ai-message-template">
+    <div class="flex flex-col w-full max-w-[85%]">
+        <div class="ai-meta text-xs text-on-surface-variant mb-1.5 pl-1 font-medium flex items-center gap-1.5"></div>
+        <div class="ai-text bg-surface-container-lowest border-l-4 border-primary shadow-sm rounded-2xl rounded-tl-sm p-5 text-on-surface text-[15px] leading-relaxed w-full"></div>
+    </div>
+</template>
+
+<template id="typing-indicator-template">
+    <div id="typing-indicator" class="flex flex-col w-full max-w-[85%]">
+        <div class="ai-meta text-xs text-on-surface-variant mb-1.5 pl-1 font-medium flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[14px] text-primary">smart_toy</span>
+            NordPet AI Assistant • Typing...
+        </div>
+        <div class="bg-surface-container-lowest border-l-4 border-primary shadow-sm rounded-2xl rounded-tl-sm p-5 flex items-center w-fit">
+            <div class="flex gap-1.5 items-center h-4">
+                <div class="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style="animation-delay: -0.3s"></div>
+                <div class="w-2 h-2 bg-primary/70 rounded-full animate-bounce" style="animation-delay: -0.15s"></div>
+                <div class="w-2 h-2 bg-primary/70 rounded-full animate-bounce"></div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script src="{% static 'js/clients/animal_chat.js' %}"></script>
+{% endblock %}

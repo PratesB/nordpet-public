@@ -2,6 +2,7 @@ from openai import OpenAI
 from django.conf import settings
 from clients.models import MedicalRecord
 from django.shortcuts import get_object_or_404
+import os
 
 
 def transcribe_recording(medical_record_id):
@@ -100,4 +101,44 @@ def generate_exam_analysis(id_medical_record: int):
         return 'Ok'
     except Exception as e:
         print(f"Exam Analysis Error: {e}")
+        return f"Error: {e}"
+
+
+
+
+def ingest_animal_knowledge(medical_record_id: int):
+    from langchain_community.vectorstores import LanceDB
+    from langchain_openai import OpenAIEmbeddings
+    from langchain_core.documents import Document
+    import lancedb
+    
+    try:
+        medical_record = get_object_or_404(MedicalRecord, pk=medical_record_id)
+        
+        content = f"Date: {medical_record.created_at}\n"
+        if medical_record.ai_summary_consultation:
+            content += f"Consultation Summary: {medical_record.ai_summary_consultation}\n"
+        if medical_record.ai_exam_interpretation:
+            content += f"Exam Findings: {medical_record.ai_exam_interpretation}\n"
+        if medical_record.clinical_note:
+            content += f"Veterinarian Notes: {medical_record.clinical_note}\n"
+            
+        if medical_record.triage:
+            content += f"Triage Info: Weight: {medical_record.triage.weight}kg, Temp: {medical_record.triage.temperature}C, Heart Rate: {medical_record.triage.heart_rate}, Respiratory Rate: {medical_record.triage.respiratory_rate}, Complaint: {medical_record.triage.complaint}, Notes: {medical_record.triage.notes}\n"
+            
+        doc = Document(
+            page_content=content,
+            metadata={"animal_id": medical_record.animal.id, "record_id": medical_record.id}
+        )
+        
+        db_path = os.path.join(settings.BASE_DIR, "lancedb_data")
+        db = lancedb.connect(db_path)
+        embeddings = OpenAIEmbeddings(api_key=settings.OPENAI_API_KEY)
+        
+        vectorstore = LanceDB(connection=db, embedding=embeddings, table_name="animal_knowledge")
+        vectorstore.add_documents([doc])
+        
+        return "Knowledge ingested successfully"
+    except Exception as e:
+        print(f"Ingest Knowledge Error: {e}")
         return f"Error: {e}"
