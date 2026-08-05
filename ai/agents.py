@@ -150,10 +150,13 @@ class AssistantAgent(BaseAgent):
         embeddings = OpenAIEmbeddings(api_key=settings.OPENAI_API_KEY)
         
         try:
-            vectorstore = LanceDB(connection=db, embedding=embeddings, table_name="animal_knowledge")
-            retriever = vectorstore.as_retriever(search_kwargs={'k': 3, 'filter': f"metadata.animal_id = {animal_id}"})
-            docs = retriever.invoke(question)
-            context = "\n\n".join([doc.page_content for doc in docs])
+            if "animal_knowledge" in db.table_names():
+                vectorstore = LanceDB(connection=db, embedding=embeddings, table_name="animal_knowledge")
+                retriever = vectorstore.as_retriever(search_kwargs={'k': 3, 'filter': f"metadata.animal_id = {animal_id}"})
+                docs = retriever.invoke(question)
+                context = "\n\n".join([doc.page_content for doc in docs])
+            else:
+                context = ""
         except Exception as e:
             print(f"Error querying LanceDB for AssistantAgent: {e}")
             context = ""
@@ -164,22 +167,81 @@ class AssistantAgent(BaseAgent):
         return f"=== PATIENT BASIC INFO ===\n{basic_info}\n\n=== MEDICAL HISTORY ===\n{context}"
 
     def run(self, animal_id, question, chat_history):
+        from ai.tools import search_veterinary_adverse_events
+        from langchain_core.messages import ToolMessage
+        
         context = self._get_context(animal_id, question)
         
-        chain = self._prompt() | self.llm
-        result = chain.invoke({
-            "context": context,
-            "chat_history": chat_history,
-            "question": question
-        })
-        return result.content
+        tools = [search_veterinary_adverse_events]
+        llm_with_tools = self.llm.bind_tools(tools)
+        
+        messages = self._prompt().format_messages(
+            context=context,
+            chat_history=chat_history,
+            question=question
+        )
+        
+        while True:
+            response = llm_with_tools.invoke(messages)
+            if not response.tool_calls:
+                return response.content
+                
+            messages.append(response)
+            for tool_call in response.tool_calls:
+                tool = next((t for t in tools if t.name == tool_call["name"]), None)
+                if tool:
+                    try:
+                        tool_result = tool.invoke(tool_call["args"])
+                    except Exception as e:
+                        tool_result = f"Error executing tool: {e}"
+                    messages.append(ToolMessage(content=str(tool_result), tool_call_id=tool_call["id"]))
         
     def stream_run(self, animal_id, question, chat_history):
+        from ai.tools import search_veterinary_adverse_events
+        from langchain_core.messages import ToolMessage
+        
         context = self._get_context(animal_id, question)
         
-        chain = self._prompt() | self.llm
-        return chain.stream({
-            "context": context,
-            "chat_history": chat_history,
-            "question": question
-        })
+        tools = [search_veterinary_adverse_events]
+        llm_with_tools = self.llm.bind_tools(tools)
+        
+        messages = self._prompt().format_messages(
+            context=context,
+            chat_history=chat_history,
+            question=question
+        )
+        
+        while True:
+            stream = llm_with_tools.stream(messages)
+            
+            try:
+                first_chunk = next(stream)
+            except StopIteration:
+                break
+                
+            # Check if LLM requested a Tool Call
+            if first_chunk.tool_call_chunks or first_chunk.tool_calls:
+                full_chunk = first_chunk
+                for chunk in stream:
+                    full_chunk += chunk
+                    
+                messages.append(full_chunk)
+                
+                for tool_call in full_chunk.tool_calls:
+                    tool = next((t for t in tools if t.name == tool_call["name"]), None)
+                    if tool:
+                        try:
+                            tool_result = tool.invoke(tool_call["args"])
+                        except Exception as e:
+                            tool_result = f"Error executing tool: {e}"
+                        messages.append(ToolMessage(content=str(tool_result), tool_call_id=tool_call["id"]))
+                        
+                # Re-run LLM to answer using tool results
+                continue
+            
+            else:
+                # Normal text response - yield token by token
+                yield first_chunk
+                for chunk in stream:
+                    yield chunk
+                break
