@@ -33,14 +33,15 @@ document.addEventListener("DOMContentLoaded", function() {
     if (pendingSummaries.length > 0) {
         pendingSummaries.forEach(function(el) {
             const recordId = el.getAttribute('data-record-id');
+            const type = el.getAttribute('data-type') || 'audio'; // default to audio if not set
             if (recordId) {
                 const interval = setInterval(function() {
                     fetch(`/clients/check-summary/${recordId}/`)
                         .then(response => response.json())
                         .then(data => {
-                            if (data.summary) {
+                            if ((type === 'audio' && data.summary) || (type === 'exam' && data.exam_interpretation)) {
                                 clearInterval(interval);
-                                // The AI finished generating the summary! Reload the page to render it beautifully.
+                                // The AI finished generating! Reload the page to render it.
                                 window.location.reload(); 
                             }
                         })

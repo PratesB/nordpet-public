@@ -80,3 +80,32 @@ class SummaryAgent(BaseAgent):
             'audience': self.audience,
             'transcript': transcription
         })
+
+
+
+class ExamAnalyses(BaseModel):
+    summary: str = Field(description="A concise clinical summary of the findings.")
+    abnormal_parameters: list[str] = Field(description="List of abnormal parameters found in the exam. Format each as: Parameter | Value | Range | Classification")
+    critical_warning: bool = Field(description="True if there are critical, life-threatening abnormalities that require immediate veterinary attention.")
+    diagnostic_hypotheses: list[str] = Field(description="List of suspected conditions based on the findings.")
+
+
+class ExamAnalysisAgent(BaseAgent):
+    def _prompt(self):
+        skill_path = os.path.join(settings.BASE_DIR, 'ai', 'skills', 'exam_analysis', 'SKILL.md')
+        with open(skill_path, 'r', encoding='utf-8') as f:
+            exam_analysis_prompt_text = f.read()
+
+        prompt = ChatPromptTemplate.from_messages([
+            ('system', exam_analysis_prompt_text),
+            ('human', 'language: {language} | audience: {audience}\nExams: {exam_results}')])
+
+        return prompt
+    
+    def run(self, exam_results):
+        chain = self._prompt() | self.llm.with_structured_output(ExamAnalyses)
+        return chain.invoke({
+            'exam_results': exam_results, 
+            'language': self.language, 
+            'audience': self.audience
+        })

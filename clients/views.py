@@ -760,5 +760,6 @@ def check_ai_summary(request, record_id):
     """
     record = get_object_or_404(MedicalRecord, pk=record_id)
     return JsonResponse({
-        'summary': record.ai_summary_consultation
+        'summary': bool(record.ai_summary_consultation),
+        'exam_interpretation': bool(record.ai_exam_interpretation)
     })
