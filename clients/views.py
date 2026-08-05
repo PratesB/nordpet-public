@@ -718,39 +718,23 @@ def triage(request, pet_id):
             messages.error(request, 'Please ensure all vital signs are valid numbers and the tutor complaint is filled out.')
             return redirect('clients:triage', pet_id=pet.id)
 
-        # Triage Logic (simplified for now)
-        risk_level = 'green'
-        
-        complaint_lower = complaint.lower()
-        red_keywords = ['seizure', 'unconscious', 'bleeding', 'choking', 'poison', 'hit by car', 'fainting']
-        orange_keywords = ['vomit', 'diarrhea', 'pain', 'fracture']
-        yellow_keywords = ['lethargic', 'fever', 'itching', 'scratching']
-        
-        if any(word in complaint_lower for word in red_keywords):
-            risk_level = 'red'
-        elif any(word in complaint_lower for word in orange_keywords):
-            risk_level = 'orange'
-        elif any(word in complaint_lower for word in yellow_keywords):
-            risk_level = 'yellow'
-            
-        # Check vital signs extremes
-        if temperature > 40.0 or temperature < 36.0:
-            risk_level = 'red'
-        elif temperature > 39.5 or temperature < 37.0:
-            if risk_level in ['green', 'yellow']:
-                risk_level = 'orange'
-                
-        if heart_rate > 180 or heart_rate < 50:
-            if risk_level in ['green', 'yellow']:
-                risk_level = 'orange'
-        if heart_rate > 220 or heart_rate < 40:
-            risk_level = 'red'
-            
-        if respiratory_rate > 60 or respiratory_rate < 15:
-            if risk_level == 'green':
-                risk_level = 'yellow'
-        if respiratory_rate > 80 or respiratory_rate < 10:
-            risk_level = 'red'
+        # Calling the Triage AI Agent
+        try:
+            from ai.agents import TriageAgent
+            agent = TriageAgent()
+            result = agent.run(
+                species=pet.get_specie_display(),
+                weight=weight,
+                heart_rate=heart_rate,
+                respiratory_rate=respiratory_rate,
+                temperature=temperature,
+                complaint=complaint,
+                notes=notes
+            )
+            risk_level = result.risk_level
+        except Exception as e:
+            messages.error(request, f'Triage AI Error: {str(e)}')
+            return redirect('clients:triage', pet_id=pet.id)
             
         triage = Triage.objects.create(
             animal=pet,

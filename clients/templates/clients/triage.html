@@ -130,7 +130,7 @@
             
             <!-- Action Button -->
             {% if not triage %}
-                <button type="submit" class="w-full bg-primary text-on-primary font-headline-sm text-2xl font-bold py-4 px-6 rounded-full shadow-md hover:shadow-lg hover:-translate-y-1 hover:bg-surface-tint transition-all duration-300 flex justify-center items-center gap-3 cursor-pointer">
+                <button type="submit" class="w-full bg-primary text-on-primary font-headline-sm text-2xl font-bold py-4 px-6 rounded-full shadow-md hover:shadow-lg hover:-translate-y-1 hover:bg-surface-tint transition-all duration-300 flex justify-center items-center gap-3 cursor-pointer disabled:opacity-80 disabled:pointer-events-none">
                     <span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
                     Submit Triage
                 </button>
@@ -144,6 +144,13 @@
                 </div>
             {% endif %}
         </div>
+        
+        <!-- Loading State Template -->
+        <template id="triage-loading-template">
+            <span class="material-symbols-outlined animate-spin" data-icon="sync">sync</span>
+            System Analyzing...
+        </template>
     </form>
 </div>
+<script src="{% static 'js/clients/triage.js' %}"></script>
 {% endblock %}

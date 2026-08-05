@@ -134,3 +134,13 @@ MESSAGE_TAGS = {
 
 # OPEN AI
 OPENAI_API_KEY = config('OPENAI_API_KEY')
+
+# DJANGO Q2
+Q_CLUSTER = {
+    "name": "nordpet-public-q2",
+    "workers": 1,
+    "retry": 200,        
+    "timeout": 180,       
+    "queue_limit": 50,
+    "orm": "default",
+}
