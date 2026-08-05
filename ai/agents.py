@@ -54,3 +54,29 @@ class TriageAgent(BaseAgent):
 
 
 
+class Summaries(BaseModel):
+    summaries: str = Field(description="Summaries of the video transcription need to be in this format.")
+
+
+class SummaryAgent(BaseAgent):
+    def _prompt(self):
+        skill_path = os.path.join(settings.BASE_DIR, 'ai', 'skills', 'summary', 'SKILL.md')
+        with open(skill_path, 'r', encoding='utf-8') as f:
+            summary_prompt_text = f.read()
+
+        prompt = ChatPromptTemplate.from_messages([
+            ('system', summary_prompt_text),
+            ('human', 'language:{language} | audience:{audience}\nUse the transcript below:\n{transcript}')
+        ])
+
+        return prompt
+
+
+    
+    def run(self, transcription):
+        chain = self._prompt() | self.llm.with_structured_output(Summaries)
+        return chain.invoke({
+            'language': self.language,
+            'audience': self.audience,
+            'transcript': transcription
+        })

@@ -23,4 +23,5 @@ urlpatterns = [
     path('appointment/<int:pet_id>/start/', views.start_consultation, name='start_consultation'),
     path('appointment/<uuid:appointment_id>/end/', views.end_consultation, name='end_consultation'),
     path('triage/<int:pet_id>/', views.triage, name='triage'),
+    path('check-summary/<int:record_id>/', views.check_ai_summary, name='check_summary'),
 ]

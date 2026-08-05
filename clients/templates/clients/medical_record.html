@@ -260,6 +260,44 @@
                                                             {{ rec.clinical_note|linebreaks }}
                                                         </div>
                                                     {% endif %}
+                                                    
+                                                    {% if rec.ai_summary_consultation %}
+                                                        <div class="bg-secondary/10 border border-secondary/20 p-5 rounded-2xl relative overflow-hidden mt-3">
+                                                            <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                                                                <span class="material-symbols-outlined text-8xl text-secondary">auto_awesome</span>
+                                                            </div>
+                                                            <div class="flex items-center justify-between mb-4 relative z-0">
+                                                                <div class="flex items-center gap-2 text-sm text-secondary font-bold uppercase tracking-wider">
+                                                                    <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+                                                                    AI Media Summary
+                                                                </div>
+                                                                <a href="{{ rec.consultation_media.url }}" target="_blank" class="text-[11px] text-secondary hover:text-white bg-secondary/10 hover:bg-secondary px-2.5 py-1 rounded-full font-bold transition-colors flex items-center gap-1" title="View Original Media">
+                                                                    <span class="material-symbols-outlined text-[14px]">play_circle</span>
+                                                                    <span class="truncate max-w-[150px]">{{ rec.consultation_media_filename }}</span>
+                                                                </a>
+                                                            </div>
+                                                            <div class="text-sm text-on-surface leading-relaxed relative z-0 space-y-2">
+                                                                {{ rec.ai_summary_consultation|linebreaks }}
+                                                            </div>
+                                                        </div>
+                                                    {% elif rec.consultation_media %}
+                                                        <div class="ai-summary-pending bg-secondary/5 border border-secondary/20 border-dashed p-5 rounded-2xl relative overflow-hidden mt-3" data-record-id="{{ rec.id }}">
+                                                            <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                                                                <span class="material-symbols-outlined text-8xl text-secondary animate-pulse">auto_awesome</span>
+                                                            </div>
+                                                            <div class="flex items-center gap-3 relative z-0">
+                                                                <span class="material-symbols-outlined text-secondary animate-spin text-[24px]">sync</span>
+                                                                <div class="flex flex-col">
+                                                                    <span class="text-sm text-secondary font-bold uppercase tracking-wider">AI is processing media</span>
+                                                                    <span class="text-xs text-secondary/80 font-medium flex items-center gap-1 mt-0.5">
+                                                                        <span class="material-symbols-outlined text-[14px]">graphic_eq</span>
+                                                                        {{ rec.consultation_media_filename }}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <p class="text-xs text-on-surface-variant mt-2 relative z-0">This might take a few moments. It will appear here automatically.</p>
+                                                        </div>
+                                                    {% endif %}
                                                 {% endfor %}
                                                 
                                                 <div class="flex flex-wrap gap-3">
@@ -291,6 +329,44 @@
                                                     <span class="material-symbols-outlined text-[14px]">edit_note</span> Clinical Note
                                                 </div>
                                                 {{ item.clinical_note|linebreaks }}
+                                            </div>
+                                        {% endif %}
+                                        
+                                        {% if item.ai_summary_consultation %}
+                                            <div class="bg-secondary/10 border border-secondary/20 p-5 rounded-2xl relative overflow-hidden mt-3">
+                                                <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                                                    <span class="material-symbols-outlined text-8xl text-secondary">auto_awesome</span>
+                                                </div>
+                                                <div class="flex items-center justify-between mb-4 relative z-0">
+                                                    <div class="flex items-center gap-2 text-sm text-secondary font-bold uppercase tracking-wider">
+                                                        <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+                                                        AI Media Summary
+                                                    </div>
+                                                    <a href="{{ item.consultation_media.url }}" target="_blank" class="text-[11px] text-secondary hover:text-white bg-secondary/10 hover:bg-secondary px-2.5 py-1 rounded-full font-bold transition-colors flex items-center gap-1" title="View Original Media">
+                                                        <span class="material-symbols-outlined text-[14px]">play_circle</span>
+                                                        <span class="truncate max-w-[150px]">{{ item.consultation_media_filename }}</span>
+                                                    </a>
+                                                </div>
+                                                <div class="text-sm text-on-surface leading-relaxed relative z-0 space-y-2">
+                                                    {{ item.ai_summary_consultation|linebreaks }}
+                                                </div>
+                                            </div>
+                                        {% elif item.consultation_media %}
+                                            <div class="ai-summary-pending bg-secondary/5 border border-secondary/20 border-dashed p-5 rounded-2xl relative overflow-hidden mt-3" data-record-id="{{ item.id }}">
+                                                <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                                                    <span class="material-symbols-outlined text-8xl text-secondary animate-pulse">auto_awesome</span>
+                                                </div>
+                                                <div class="flex items-center gap-3 relative z-0">
+                                                    <span class="material-symbols-outlined text-secondary animate-spin text-[24px]">sync</span>
+                                                    <div class="flex flex-col">
+                                                        <span class="text-sm text-secondary font-bold uppercase tracking-wider">AI is processing media</span>
+                                                        <span class="text-xs text-secondary/80 font-medium flex items-center gap-1 mt-0.5">
+                                                            <span class="material-symbols-outlined text-[14px]">graphic_eq</span>
+                                                            {{ item.consultation_media_filename }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <p class="text-xs text-on-surface-variant mt-2 relative z-0">This might take a few moments. It will appear here automatically.</p>
                                             </div>
                                         {% endif %}
                                         

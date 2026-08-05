@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'users',
     'clients',
     'ai',
+    'django_q',
 ]
 
 MIDDLEWARE = [

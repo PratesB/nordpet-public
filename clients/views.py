@@ -747,7 +747,18 @@ def triage(request, pet_id):
             risk_level=risk_level
         )
         
-
         return redirect('clients:triage', pet_id=pet.id)
 
     return render(request, 'clients/triage.html', {'pet': pet, 'triage': triage})
+
+
+
+def check_ai_summary(request, record_id):
+    """
+    Returns the AI summary status for a specific MedicalRecord.
+    Used by JS polling to determine when the background task finishes.
+    """
+    record = get_object_or_404(MedicalRecord, pk=record_id)
+    return JsonResponse({
+        'summary': record.ai_summary_consultation
+    })
