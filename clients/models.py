@@ -206,3 +206,28 @@ class MedicalRecord(models.Model):
 
     def __str__(self):
         return f'Medical Record - {self.animal.name} - {self.created_at.strftime("%Y-%m-%d %H:%M")}'
+
+
+class ChatMessage(models.Model):
+    ROLE_CHOICES = [
+        ('user', 'User'),
+        ('assistant', 'Assistant')
+    ]
+    
+    animal = models.ForeignKey(Animal, on_delete=models.CASCADE, related_name='chat_messages')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    content = models.TextField()
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='chat_messages'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f'{self.role} message for {self.animal.name} at {self.created_at.strftime("%Y-%m-%d %H:%M")}'

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.contrib.auth.decorators import login_required
-from .models import Client, Animal, Appointment, Triage, MedicalRecord
+from .models import Client, Animal, Appointment, Triage, MedicalRecord, ChatMessage
 from datetime import datetime, timedelta
 from django.db import transaction
 from django.contrib import messages
@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 import os
-
+import json
 
 User = get_user_model()
 
@@ -718,39 +718,23 @@ def triage(request, pet_id):
             messages.error(request, 'Please ensure all vital signs are valid numbers and the tutor complaint is filled out.')
             return redirect('clients:triage', pet_id=pet.id)
 
-        # Triage Logic (simplified for now)
-        risk_level = 'green'
-        
-        complaint_lower = complaint.lower()
-        red_keywords = ['seizure', 'unconscious', 'bleeding', 'choking', 'poison', 'hit by car', 'fainting']
-        orange_keywords = ['vomit', 'diarrhea', 'pain', 'fracture']
-        yellow_keywords = ['lethargic', 'fever', 'itching', 'scratching']
-        
-        if any(word in complaint_lower for word in red_keywords):
-            risk_level = 'red'
-        elif any(word in complaint_lower for word in orange_keywords):
-            risk_level = 'orange'
-        elif any(word in complaint_lower for word in yellow_keywords):
-            risk_level = 'yellow'
-            
-        # Check vital signs extremes
-        if temperature > 40.0 or temperature < 36.0:
-            risk_level = 'red'
-        elif temperature > 39.5 or temperature < 37.0:
-            if risk_level in ['green', 'yellow']:
-                risk_level = 'orange'
-                
-        if heart_rate > 180 or heart_rate < 50:
-            if risk_level in ['green', 'yellow']:
-                risk_level = 'orange'
-        if heart_rate > 220 or heart_rate < 40:
-            risk_level = 'red'
-            
-        if respiratory_rate > 60 or respiratory_rate < 15:
-            if risk_level == 'green':
-                risk_level = 'yellow'
-        if respiratory_rate > 80 or respiratory_rate < 10:
-            risk_level = 'red'
+        # Calling the Triage AI Agent
+        try:
+            from ai.agents import TriageAgent
+            agent = TriageAgent()
+            result = agent.run(
+                species=pet.get_specie_display(),
+                weight=weight,
+                heart_rate=heart_rate,
+                respiratory_rate=respiratory_rate,
+                temperature=temperature,
+                complaint=complaint,
+                notes=notes
+            )
+            risk_level = result.risk_level
+        except Exception as e:
+            messages.error(request, f'Triage AI Error: {str(e)}')
+            return redirect('clients:triage', pet_id=pet.id)
             
         triage = Triage.objects.create(
             animal=pet,
@@ -763,7 +747,68 @@ def triage(request, pet_id):
             risk_level=risk_level
         )
         
-
         return redirect('clients:triage', pet_id=pet.id)
 
     return render(request, 'clients/triage.html', {'pet': pet, 'triage': triage})
+
+
+
+def check_ai_summary(request, record_id):
+    """
+    Returns the AI summary status for a specific MedicalRecord.
+    Used by JS polling to determine when the background task finishes.
+    """
+    record = get_object_or_404(MedicalRecord, pk=record_id)
+    return JsonResponse({
+        'summary': bool(record.ai_summary_consultation),
+        'exam_interpretation': bool(record.ai_exam_interpretation)
+    })
+
+
+
+
+
+@login_required(login_url='users:login')
+def animal_chat_view(request, pet_id):
+    pet = get_object_or_404(Animal, pk=pet_id)
+    chat_history = pet.chat_messages.all()
+    return render(request, 'clients/animal_chat.html', {'pet': pet, 'chat_history': chat_history})
+
+@login_required(login_url='users:login')
+def animal_chat_api(request, pet_id):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            question = data.get('question')
+            
+            pet = get_object_or_404(Animal, pk=pet_id)
+            
+            # Fetch history from DB (before saving the current question)
+            # LIMIT: I only fetch the last 6 messages (approx 3 past interactions) to save LLM tokens and speed up response
+            history_qs = ChatMessage.objects.filter(animal=pet).order_by('-created_at')[:6]
+            history = reversed(history_qs) # reverse back to chronological order
+            history_tuples = [(msg.role, msg.content) for msg in history]
+            
+            # Save User Message to DB
+            ChatMessage.objects.create(animal=pet, role='user', content=question, sender=request.user)
+            
+            from ai.agents import AssistantAgent
+            
+            def event_stream():
+                agent = AssistantAgent()
+                full_response = ""
+                for chunk in agent.stream_run(animal_id=pet.id, question=question, chat_history=history_tuples):
+                    content = chunk.content if hasattr(chunk, 'content') else str(chunk)
+                    full_response += content
+                    yield f"data: {json.dumps({'chunk': content})}\n\n"
+                
+                # Save AI response to DB
+                ChatMessage.objects.create(animal=pet, role='assistant', content=full_response)
+                yield "data: [DONE]\n\n"
+                
+            return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+            
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    
+    return JsonResponse({"error": "Invalid request method"}, status=405)

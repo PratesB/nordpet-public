@@ -27,4 +27,27 @@ document.addEventListener("DOMContentLoaded", function() {
             setInterval(updateTimer, 1000);
         }
     }
+
+    // AI Summary Polling
+    const pendingSummaries = document.querySelectorAll('.ai-summary-pending');
+    if (pendingSummaries.length > 0) {
+        pendingSummaries.forEach(function(el) {
+            const recordId = el.getAttribute('data-record-id');
+            const type = el.getAttribute('data-type') || 'audio'; // default to audio if not set
+            if (recordId) {
+                const interval = setInterval(function() {
+                    fetch(`/clients/check-summary/${recordId}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if ((type === 'audio' && data.summary) || (type === 'exam' && data.exam_interpretation)) {
+                                clearInterval(interval);
+                                // The AI finished generating! Reload the page to render it.
+                                window.location.reload(); 
+                            }
+                        })
+                        .catch(error => console.error('Error fetching summary:', error));
+                }, 5000); // Check every 5 seconds
+            }
+        });
+    }
 });

@@ -28,7 +28,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users',
-    'clients'
+    'clients',
+    'ai',
+    'django_q',
 ]
 
 MIDDLEWARE = [
@@ -128,4 +130,18 @@ MESSAGE_TAGS = {
     messages.SUCCESS: 'bg-success-green text-white',
     messages.WARNING: 'bg-warning-amber text-white',
     messages.ERROR: 'bg-error-red text-white',
+}
+
+
+# OPEN AI
+OPENAI_API_KEY = config('OPENAI_API_KEY')
+
+# DJANGO Q2
+Q_CLUSTER = {
+    "name": "nordpet-public-q2",
+    "workers": 1,
+    "retry": 200,        
+    "timeout": 180,       
+    "queue_limit": 50,
+    "orm": "default",
 }
