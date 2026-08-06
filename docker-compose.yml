@@ -21,7 +21,7 @@ services:
     env_file:
       - .env
     environment:
-      - DB_HOST=db 
+      - DB_HOST=db # Overrides the 127.0.0.1 from .env to work on the Docker network
     depends_on:
       - db
     restart: always
