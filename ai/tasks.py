@@ -43,6 +43,9 @@ def generate_summary(id_medical_record: int):
             medical_record.ai_summary_consultation = summary.summaries
             medical_record.save(update_fields=['ai_summary_consultation'])
             
+            # Ingest to LanceDB
+            ingest_animal_knowledge(medical_record.id)
+            
         return 'Ok'
     except Exception as e:
         print(f"Summary Generation Error: {e}")
@@ -97,6 +100,9 @@ def generate_exam_analysis(id_medical_record: int):
             exam_analysis = exam_analysis_agent.run(medical_record.ai_exam_ocr_text)
             medical_record.ai_exam_interpretation = exam_analysis.model_dump() if hasattr(exam_analysis, 'model_dump') else exam_analysis.dict()
             medical_record.save(update_fields=['ai_exam_interpretation'])
+            
+            # Ingest to LanceDB
+            ingest_animal_knowledge(medical_record.id)
             
         return 'Ok'
     except Exception as e:
