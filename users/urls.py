@@ -11,6 +11,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('logout/', views.logout, name='logout'),
     path('team/new/', views.register_member, name='register_member'),
+    path('settings/', views.settings, name='settings'),
     path('team/', views.team, name='team'),
     path('team/<uuid:user_id>/update/', views.update_member, name='update_member'),
     path('team/<uuid:user_id>/delete/', views.delete_member, name='delete_member'),

@@ -7,7 +7,7 @@
         <!-- Page Header -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
             <div>
-                <h2 class="text-3xl font-bold text-teal-900 mb-1">Team Directory</h2>
+                <h2 class="text-3xl font-bold text-primary mb-2">Team Directory</h2>
                 <p class="text-gray-500">Manage clinic staff, roles, and access permissions.</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
@@ -59,7 +59,9 @@
                             <th class="py-4 px-6 text-xs uppercase tracking-wider text-gray-500 font-semibold">Created</th>
                             <th class="py-4 px-6 text-xs uppercase tracking-wider text-gray-500 font-semibold">Updated</th>
                             <th class="py-4 px-6 text-xs uppercase tracking-wider text-gray-500 font-semibold">Status</th>
-                            <th class="py-4 px-6 text-xs uppercase tracking-wider text-gray-500 font-semibold text-right">Actions</th>
+                            {% if request.user.role == 'ADM' %}
+                                <th class="py-4 px-6 text-xs uppercase tracking-wider text-gray-500 font-semibold text-right">Actions</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody id="teamTableBody" class="text-sm text-gray-700">
@@ -111,9 +113,9 @@
                                         {% endif %}
                                     </div>
                                 </td>
-                                <td class="py-4 px-6 text-right">
-                                    <div class="flex justify-end gap-1">
-                                        {% if request.user.role == 'ADM' %}
+                                {% if request.user.role == 'ADM' %}
+                                    <td class="py-4 px-6 text-right">
+                                        <div class="flex justify-end gap-1">
                                             <a href="{% url 'users:update_member' member.id %}"
                                                class="p-2 text-gray-400 hover:text-teal-600 rounded-full hover:bg-teal-50 transition-colors"
                                                title="Edit">
@@ -130,9 +132,9 @@
                                                     <span class="material-symbols-outlined text-[18px]">delete</span>
                                                 </button>
                                             </form>
-                                        {% endif %}
-                                    </div>
-                                </td>
+                                        </div>
+                                    </td>
+                                {% endif %}
                             </tr>
                         {% empty %}
                             <tr id="emptyRow">
@@ -140,7 +142,7 @@
                             </tr>
                         {% endfor %}
                         <tr id="noMatchesRow" style="display: none;">
-                            <td colspan="7" class="py-8 px-6 text-center text-gray-500">No members match your search criteria.</td>
+                            <td colspan="8" class="py-8 px-6 text-center text-gray-500">No members match your search criteria.</td>
                         </tr>
                     </tbody>
                 </table>

@@ -71,7 +71,7 @@ class Appointment(models.Model):
     REASON_CHOICES = [
         ('routine', 'Routine Check-up'),
         ('vaccine', 'Vaccination'),
-        ('illness', 'Illness / Sickness'),
+        ('illness', 'Illness'),
         ('emergency', 'Emergency'),
         ('surgery', 'Surgery'),
         ('followup', 'Follow-up'),

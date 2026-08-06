@@ -8,6 +8,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import User
 from clients.models import Appointment
+from django.db.models import Q
 
 
 
@@ -159,14 +160,48 @@ def register_member(request):
     return render(request, 'users/register_member.html')
 
 
+@login_required(login_url='users:login')
+def settings(request):
+    if request.user.role != 'ADM':
+        messages.error(request, 'Only Administrators can access settings.')
+        return redirect('users:dashboard')
 
-from django.db.models import Q
+    if request.method == 'POST':
+        user = request.user
+        user.first_name = request.POST.get('first_name')
+        user.last_name = request.POST.get('last_name')
+        user.phone = request.POST.get('phone')
+        
+        email = request.POST.get('email')
+        if User.objects.filter(email=email).exclude(id=user.id).exists():
+            messages.error(request, 'Email already in use by another user.')
+            return redirect('users:settings')
+            
+        photo = request.FILES.get('photo')
+        if photo:
+            user.photo = photo
+
+        password = request.POST.get('password')
+        if password:
+            user.set_password(password)
+
+        user.email = email
+        user.save()
+        
+        if password:
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, user)
+        
+        messages.success(request, 'Settings updated successfully')
+        return redirect('users:settings')
+
+    return render(request, 'users/settings.html')
+
+
+
 
 @login_required(login_url='users:login')
 def team(request):
-    if request.user.role != 'ADM':
-        return redirect('users:dashboard')
-    
     search_query = request.GET.get('search', '')
     role_filter = request.GET.get('role', '')
     

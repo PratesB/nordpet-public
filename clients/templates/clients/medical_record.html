@@ -34,13 +34,10 @@
                     
                     <div class="flex items-center flex-wrap gap-3 shrink-0">
                         <a href="{% url 'clients:animal_chat_view' pet.id %}" class="bg-primary-container text-on-primary-container px-4 py-2 rounded-full font-bold flex items-center gap-2 hover:bg-primary hover:text-white transition-all shadow-sm" title="Chat with Patient's AI Memory">
-                            <span class="material-symbols-outlined text-[20px]">smart_toy</span>
+                            <span class="material-symbols-outlined text-[20px]">auto_awesome</span>
                             AI Assistant
                         </a>
-                        <a href="{% url 'clients:patients' %}" class="text-primary hover:underline font-medium flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-                            Back to Patients
-                        </a>
+
                         {% if user.role == 'VET' %}
                             {% if active_appointment and active_appointment.veterinarian == user %}
                                 {% if active_appointment.status == 'scheduled' %}
@@ -75,33 +72,42 @@
                     </div>
                 </div>
                 
-                <p class="font-body-md text-base text-on-surface-variant mb-3 flex items-center flex-wrap gap-x-2">
-                    <span>{{ pet.get_specie_display }}</span> <span class="opacity-50">•</span>
-                    <span>{{ pet.breed }}</span> <span class="opacity-50">•</span>
-                    <span class="flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[16px]">cake</span>
+                <!-- Patient Info Bar (Highlighted) -->
+                <div class="inline-flex w-fit flex-wrap items-center gap-3 md:gap-4 text-sm bg-primary/5 px-4 py-2.5 rounded-xl text-on-surface-variant border border-primary/20 shadow-sm mb-3">
+                    <div class="flex items-center gap-1.5 font-bold text-gray-900">
+                        <span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1">pets</span>
+                        {{ pet.get_specie_display }}
+                    </div>
+                    <div class="w-px h-4 bg-primary/20 hidden sm:block"></div>
+                    <div class="flex items-center gap-1.5 font-medium text-gray-900">
+                        <span class="material-symbols-outlined text-[18px] text-indigo-500" style="font-variation-settings: 'FILL' 1">fingerprint</span>
+                        {{ pet.breed }}
+                    </div>
+                    <div class="w-px h-4 bg-primary/20 hidden sm:block"></div>
+                    <div class="flex items-center gap-1.5 font-medium text-gray-900">
+                        <span class="material-symbols-outlined text-[18px] text-amber-500" style="font-variation-settings: 'FILL' 1">cake</span>
                         {% if pet.date_of_birth %}
-                            {{ pet.date_of_birth|date:"d M, Y" }} {% if pet.is_estimated_dob %}<span class="text-xs">(Estimated)</span>{% endif %}
+                            {{ pet.date_of_birth|date:"d M, Y" }} {% if pet.is_estimated_dob %}<span class="text-xs text-gray-500 font-normal">(Est.)</span>{% endif %}
                         {% else %}
                             Unknown DOB
                         {% endif %}
-                    </span>
-                </p>
-
-                <!-- Tutor Info Bar -->
-                <div class="inline-flex flex-wrap items-center gap-3 md:gap-4 text-sm bg-surface-container px-4 py-2 rounded-xl text-on-surface-variant border border-border-teal/30">
-                    <div class="flex items-center gap-1.5 font-bold text-primary">
-                        <span class="material-symbols-outlined text-[18px]">person</span>
-                        {{ pet.owner.name }}
                     </div>
-                    <div class="w-px h-4 bg-border-teal hidden sm:block"></div>
-                    <div class="flex items-center gap-1.5 font-medium">
-                        <span class="material-symbols-outlined text-[16px] text-outline">call</span>
+                </div>
+
+                <!-- Tutor Info (Secondary) -->
+                <div class="flex items-center flex-wrap gap-x-4 gap-y-2 text-sm text-gray-600">
+                    <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[16px] text-gray-400" style="font-variation-settings: 'FILL' 1">person</span>
+                        Tutor: <span class="font-medium text-gray-700">{{ pet.owner.name }}</span>
+                    </div>
+                    <span class="text-gray-300 hidden sm:inline">•</span>
+                    <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[16px] text-blue-400" style="font-variation-settings: 'FILL' 1">call</span>
                         {{ pet.owner.phone }}
                     </div>
-                    <div class="w-px h-4 bg-border-teal hidden sm:block"></div>
-                    <div class="flex items-center gap-1.5 font-medium break-all">
-                        <span class="material-symbols-outlined text-[16px] text-outline">mail</span>
+                    <span class="text-gray-300 hidden sm:inline">•</span>
+                    <div class="flex items-center gap-1.5 break-all">
+                        <span class="material-symbols-outlined text-[16px] text-purple-400" style="font-variation-settings: 'FILL' 1">mail</span>
                         {{ pet.owner.email }}
                     </div>
                 </div>
