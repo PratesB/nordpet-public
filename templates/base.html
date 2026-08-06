@@ -21,14 +21,8 @@
         <!-- SideNavBar -->
         <aside class="bg-mint-bg fixed left-0 top-0 h-screen w-[260px] shadow-md flex flex-col py-6 border-r border-border-teal z-20">
             <!-- Brand Header -->
-            <div class="px-6 mb-8 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold font-headline-md text-headline-md">
-                    <span class="material-symbols-outlined text-[28px]" data-weight="fill">pets</span>
-                </div>
-                <div>
-                    <h1 class="font-headline-md text-headline-md font-bold text-primary">NordPet</h1>
-                    <p class="font-body-sm text-body-sm text-on-surface-variant">Veterinary Care</p>
-                </div>
+            <div class="px-6 mb-8 mt-2 flex justify-center">
+                <img src="{% static 'imagens/logo.png' %}" alt="NordPet" class="max-h-16 w-auto object-contain mix-blend-multiply">
             </div>
             <!-- Navigation Tabs -->
             <nav class="flex-1 px-2 space-y-2">
@@ -57,20 +51,22 @@
                         <span class="material-symbols-outlined" data-icon="groups">groups</span>
                         Clients
                     </a>
-                    {% if request.user.is_authenticated and request.user.role == 'ADM' %}
-                        <!-- Team Members (Admin Only) -->
+                    {% if request.user.is_authenticated %}
+                        <!-- Team Members -->
                         <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'team' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
                            href="{% url 'users:team' %}">
                             <span class="material-symbols-outlined" data-icon="person">person</span>
                             Team Members
                         </a>
                     {% endif %}
-                    <!-- Settings -->
-                    <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'settings' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
-                       href="#">
-                        <span class="material-symbols-outlined" data-icon="settings">settings</span>
-                        Settings
-                    </a>
+                    {% if request.user.is_authenticated and request.user.role == 'ADM' %}
+                        <!-- Settings -->
+                        <a class="flex items-center gap-4 rounded-full px-6 py-4 font-label-caps text-label-caps {% if request.resolver_match.url_name == 'settings' %}bg-primary-container text-on-primary-container transition-transform duration-150 scale-95{% else %}text-on-surface-variant hover:bg-surface-container-highest transition-colors{% endif %}"
+                           href="{% url 'users:settings' %}">
+                            <span class="material-symbols-outlined" data-icon="settings">settings</span>
+                            Settings
+                        </a>
+                    {% endif %}
                 {% endblock %}
             </nav>
             <!-- CTA -->

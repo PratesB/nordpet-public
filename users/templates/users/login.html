@@ -4,13 +4,10 @@
 {% block content %}
     <main class="w-full max-w-md mx-auto">
         <!-- Logo and Heading -->
-        <div class="text-center mb-8">
-            <div class="flex justify-center items-center gap-2 mb-2">
-                <span class="material-symbols-outlined text-[40px] text-primary"
-                      style="font-variation-settings: 'FILL' 1">pets</span>
-                <h1 class="text-4xl font-bold text-primary tracking-tight">NordPet</h1>
+        <div class="text-center mb-6">
+            <div class="flex justify-center items-center mx-auto w-48 sm:w-56">
+                <img src="{% static 'imagens/logo.png' %}" alt="NordPet" class="w-full h-auto object-contain mix-blend-multiply">
             </div>
-            <p class="text-[18px] text-gray-600">Welcome Back</p>
         </div>
         {% if messages %}
             <div class="flex flex-col gap-2 mb-6">
@@ -80,9 +77,6 @@
                 </p>
             </div>
         </div>
-        <!-- System Version -->
-        <div class="mt-8 text-center">
-            <span class="text-sm text-gray-500">NordPet System v1.0</span>
-        </div>
+
     </main>
 {% endblock %}

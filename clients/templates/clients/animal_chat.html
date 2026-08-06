@@ -21,27 +21,51 @@
                 {% endif %}
             </div>
             <div class="flex flex-col">
-                <div class="flex items-end gap-3 mb-1">
+                <div class="flex items-center gap-2 mb-1">
                     <h1 class="font-bold text-xl text-on-surface m-0 leading-none">{{ pet.name }}</h1>
-                    <p class="text-xs text-on-surface-variant m-0 leading-none pb-0.5">
-                        {{ pet.get_specie_display }} • {{ pet.breed }} • {{ pet.get_gender_display }}
-                    </p>
+                    {% if pet.gender == 'M' %}
+                        <span class="material-symbols-outlined text-info-blue text-[18px]" title="Male">male</span>
+                    {% elif pet.gender == 'F' %}
+                        <span class="material-symbols-outlined text-pink-500 text-[18px]" title="Female">female</span>
+                    {% endif %}
                 </div>
                 
-                <!-- Tutor Info Bar -->
-                <div class="inline-flex flex-wrap items-center gap-3 text-xs bg-surface-container px-3 py-1.5 rounded-lg text-on-surface-variant mt-2 border border-border-teal/50">
-                    <div class="flex items-center gap-1.5 font-bold text-primary">
-                        <span class="material-symbols-outlined text-[16px]">person</span>
-                        {{ pet.owner.name }}
+                <!-- Patient Info Bar (Highlighted) -->
+                <div class="inline-flex w-fit flex-wrap items-center gap-2.5 text-xs bg-primary/5 px-3 py-1.5 rounded-lg text-on-surface-variant mt-1 border border-primary/20 shadow-sm">
+                    <div class="flex items-center gap-1 font-bold text-gray-900">
+                        <span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1">pets</span>
+                        {{ pet.get_specie_display }}
                     </div>
-                    <div class="w-px h-3 bg-border-teal"></div>
-                    <div class="flex items-center gap-1.5 font-medium">
-                        <span class="material-symbols-outlined text-[14px] text-outline">call</span>
+                    <div class="w-px h-3 bg-primary/20"></div>
+                    <div class="flex items-center gap-1 font-medium text-gray-900">
+                        <span class="material-symbols-outlined text-[14px] text-indigo-500" style="font-variation-settings: 'FILL' 1">fingerprint</span>
+                        {{ pet.breed }}
+                    </div>
+                    <div class="w-px h-3 bg-primary/20"></div>
+                    <div class="flex items-center gap-1 font-medium text-gray-900">
+                        <span class="material-symbols-outlined text-[14px] text-amber-500" style="font-variation-settings: 'FILL' 1">cake</span>
+                        {% if pet.date_of_birth %}
+                            {{ pet.date_of_birth|date:"d M, Y" }}
+                        {% else %}
+                            Unknown DOB
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Tutor Info (Secondary) -->
+                <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600 mt-2">
+                    <div class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px] text-gray-400" style="font-variation-settings: 'FILL' 1">person</span>
+                        Tutor: <span class="font-medium text-gray-700">{{ pet.owner.name }}</span>
+                    </div>
+                    <span class="text-gray-300">•</span>
+                    <div class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px] text-blue-400" style="font-variation-settings: 'FILL' 1">call</span>
                         {{ pet.owner.phone }}
                     </div>
-                    <div class="w-px h-3 bg-border-teal"></div>
-                    <div class="flex items-center gap-1.5 font-medium">
-                        <span class="material-symbols-outlined text-[14px] text-outline">mail</span>
+                    <span class="text-gray-300">•</span>
+                    <div class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px] text-purple-400" style="font-variation-settings: 'FILL' 1">mail</span>
                         {{ pet.owner.email }}
                     </div>
                 </div>
