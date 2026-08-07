@@ -1,5 +1,7 @@
 # Nordpet
 
+**[View the Full NordPet Case Study & Project Presentation](https://pratesdev.com/nordpet)**
+
 A modern, robust Veterinary Clinic Management System powered by autonomous AI.
 
 Nordpet is a comprehensive, production-ready web application designed to streamline veterinary clinic operations. Beyond traditional patient and appointment management, it acts as a digital medical assistant. The system leverages a multi-agent AI architecture (powered by LangChain, LanceDB, and OpenAI) to automate complex clinical workflows: transcribing voice consultations, parsing PDF lab results via OCR, searching the FDA for medication safety, and performing intelligent medical triage. Built with Django, Docker, and Tailwind CSS, Nordpet is engineered for scalability, robust background processing, and a premium user experience.
